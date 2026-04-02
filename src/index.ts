@@ -1,11 +1,12 @@
-import express from "express";
-import type { Request, Response } from "express";
 import dotenv from "dotenv";
-import morgan from "morgan";
-
-import routes from "./routes";
-
 dotenv.config({ path: ".env" });
+
+import { connectMongoose } from "./database/mongoose";
+import express from "express";
+import morgan from "morgan";
+import routes from "./routes";
+import http from "http";
+
 
 const app = express();
 app.use(morgan("combined"));
@@ -14,16 +15,26 @@ app.set("trust proxy", true);
 
 const port = process.env.PORT;
 
-const server = app.listen(Number(port), `${process.env.DYNAMIC_HOST}`, () => {
-  console.log(`Vaulty running on: ${port}`);
-});
+(async () => {
+  let server: http.Server | undefined;
+  try {
+    await connectMongoose();
 
-server.on("error", (error: any) => {
-  console.error("Server error: ", error);
-  server.close(() => {
-    console.warn("Server shutdown..");
-    process.exit(0);
-  });
-});
+    server = app.listen(Number(port), `${process.env.DYNAMIC_HOST}`, () => {
+      console.log(`Vaulty running on: ${port}`);
+    });
 
-app.use("/api/v1", routes);
+    app.use("/api/v1", routes);
+  } catch (error) {
+    console.error("Server error: ", error);
+
+    if (!server) {
+      process.exit(0);
+    }
+
+    server.close(() => {
+      console.warn("Server shutdown..");
+      process.exit(0);
+    });
+  }
+})();
