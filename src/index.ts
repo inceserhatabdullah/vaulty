@@ -3,6 +3,8 @@ import type { Request, Response } from "express";
 import dotenv from "dotenv";
 import morgan from "morgan";
 
+import routes from "./routes";
+
 dotenv.config({ path: ".env" });
 
 const app = express();
@@ -24,10 +26,4 @@ server.on("error", (error: any) => {
   });
 });
 
-app.get("/api/v1/secrets", (request: Request, response: Response) => {
-  //response.json({ id: 1, title: "password", content: "1" });
-  response.json({
-    remoteAddress: request.socket.remoteAddress,
-    userAgent: request.headers["user-agent"],
-  });
-});
+app.use("/api/v1", routes);
