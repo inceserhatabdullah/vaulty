@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { timeoutMiddleware } from "../middleware/timeout";
+import { timeoutMiddleware } from "../middleware/timeout.middleware";
 import type { Request, Response } from "express";
 
 const router = Router();

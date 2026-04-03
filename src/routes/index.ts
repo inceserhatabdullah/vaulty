@@ -1,5 +1,5 @@
 import { Router } from "express";
-import secretRouter from "./secret";
+import secretRouter from "./secret.route";
 
 const apiRouter = Router();
 

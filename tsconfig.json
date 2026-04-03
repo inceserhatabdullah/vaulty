@@ -5,8 +5,10 @@
     "moduleResolution": "bundler",
     "outDir": "./dist",
     "rootDir": "./src",
-    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
   },
+  "exclude": ["node_modules", "dist"]
 }

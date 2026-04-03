@@ -6,10 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prestart": "pnpm build",
     "dev": "tsx --watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "tsx src/index.ts"
   },
   "keywords": [],
   "author": "",
