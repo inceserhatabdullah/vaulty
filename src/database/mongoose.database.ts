@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { globalEntityPlugin } from "./config/mongoose.config";
+mongoose.plugin(globalEntityPlugin);
 
 const defaultMongooseHost = "mongodb://127.0.0.1:27017/vaulty";
 
