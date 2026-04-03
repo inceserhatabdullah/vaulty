@@ -1,16 +1,14 @@
 import { Schema, model, HydratedDocument } from "mongoose";
 import bcrypt from "bcryptjs";
-import { v4 as uuidv4 } from "uuid";
+import { IBaseEntity } from "../interfaces/base.interface";
 
-export interface IUser extends Document {
-  _id: string;
+export interface IUser extends IBaseEntity {
   username: string;
   password: string;
 }
 
 const userSchema = new Schema<IUser>(
   {
-    _id: { type: String, default: () => uuidv4() },
     username: { type: String, required: true, unique: true },
     password: {
       type: String,
@@ -25,10 +23,9 @@ const userSchema = new Schema<IUser>(
     },
   },
   {
-    timestamps: true,
     toObject: {
       transform: (doc, ret) => {
-        const { password, __v, ...rest } = ret;
+        const { password, ...rest } = ret;
         return rest;
       },
     },
