@@ -25,8 +25,13 @@ const userSchema = new Schema<IUser>(
     },
   },
   {
-    versionKey: false,
     timestamps: true,
+    toObject: {
+      transform: (doc, ret) => {
+        const { password, __v, ...rest } = ret;
+        return rest;
+      },
+    },
   },
 );
 
