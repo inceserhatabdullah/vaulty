@@ -1,22 +1,36 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, HydratedDocument } from "mongoose";
 import bcrypt from "bcryptjs";
+import { v4 as uuidv4 } from "uuid";
 
-const userSchema = new Schema({
-  username: { type: String, required: true, unique: true },
-  password: {
-    type: String,
-    required: true,
-    validate: {
-      validator: function (value: string) {
-        return /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])(?=.{6,})/.test(value);
+export interface IUser extends Document {
+  _id: string;
+  username: string;
+  password: string;
+}
+
+const userSchema = new Schema<IUser>(
+  {
+    _id: { type: String, default: () => uuidv4() },
+    username: { type: String, required: true, unique: true },
+    password: {
+      type: String,
+      required: true,
+      validate: {
+        validator: function (value: string) {
+          return /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])(?=.{6,})/.test(value);
+        },
+        message:
+          "Password must be at least 6 characters long and contain at least one letter, one number, and one special character.",
       },
-      message:
-        "Password must be at least 6 characters long and contain at least one letter, one number, and one special character.",
     },
   },
-});
+  {
+    versionKey: false,
+    timestamps: true,
+  },
+);
 
-userSchema.pre("save", async function () {
+userSchema.pre("save", async function (this: HydratedDocument<IUser>) {
   if (!this.isModified("password")) {
     return;
   }
@@ -25,4 +39,4 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-export const User = model("User", userSchema);
+export const User = model<IUser>("User", userSchema);
