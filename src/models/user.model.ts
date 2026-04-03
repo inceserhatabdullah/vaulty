@@ -7,12 +7,15 @@ export interface IUser extends IBaseEntity {
   password: string;
 }
 
+//const user = await User.findOne({ username }).select('+password');
+
 const userSchema = new Schema<IUser>(
   {
     username: { type: String, required: true, unique: true },
     password: {
       type: String,
       required: true,
+      select: false,
       validate: {
         validator: function (value: string) {
           return /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])(?=.{6,})/.test(value);

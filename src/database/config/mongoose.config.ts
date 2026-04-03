@@ -3,7 +3,7 @@ import { Schema, Query } from "mongoose";
 export const globalEntityPlugin = (schema: Schema) => {
   schema.add({
     _id: { type: String, default: () => crypto.randomUUID() },
-    isDeleted: { type: Boolean, default: false, select: false },
+    isDeleted: { type: Boolean, default: false },
   });
 
   schema.set("timestamps", true);
