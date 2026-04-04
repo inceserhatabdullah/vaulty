@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { JwtService } from "../services/jwt.service";
-import {
-  tokenRepository,
-} from "../repositories/token.repository";
+import { tokenRepository } from "../repositories/token.repository";
 
 export const verifyTokenMiddleware = async (
   request: Request,
@@ -18,9 +16,12 @@ export const verifyTokenMiddleware = async (
 
     const token = header.replace(/^Bearer\s+/i, "");
     const decoded = await JwtService.verifyToken(token);
-    
+
     if (!decoded) {
-      return response.status(401).json({ message: "Token expired or invalid", code: "TOKEN_EXPIRED_OR_INVALID" });
+      return response.status(401).json({
+        message: "Token expired or invalid",
+        code: "TOKEN_EXPIRED_OR_INVALID",
+      });
     }
 
     const storedToken = await tokenRepository.findOne({

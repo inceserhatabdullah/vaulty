@@ -14,7 +14,7 @@ export const globalEntityPlugin = (schema: Schema) => {
     "findOne",
     "findOneAndUpdate",
     "countDocuments",
-    "findOneAndDelete"
+    "findOneAndDelete",
   ] as any;
 
   schema.pre(findMethods, function (this: Query<any, any>) {
