@@ -1,13 +1,11 @@
 import { Schema, model, HydratedDocument } from "mongoose";
-import bcrypt from "bcryptjs";
 import { IBaseEntity } from "../interfaces/base.interface";
+import { BcryptService } from "../services/bcrypt.service";
 
 export interface IUser extends IBaseEntity {
   username: string;
   password: string;
 }
-
-//const user = await User.findOne({ username }).select('+password');
 
 const userSchema = new Schema<IUser>(
   {
@@ -40,8 +38,7 @@ userSchema.pre("save", async function (this: HydratedDocument<IUser>) {
     return;
   }
 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await BcryptService.hashPassword(this.password);
 });
 
 export const User = model<IUser>("User", userSchema);

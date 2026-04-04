@@ -1,19 +1,23 @@
 import { Request, Response } from "express";
-import { UserRepository } from "../repositories/user.repository";
-
-const userRepository = new UserRepository();
+import { authService } from "../services/auth.service";
 
 export const signup = async (request: Request, response: Response) => {
   try {
-    const { username, password } = request.body;
-    const user = await userRepository.findOne({ username });
+    const { newUser, newToken } = await authService.signup(request.body);
+    return response
+      .status(201)
+      .json({ username: newUser.username, token: newToken.token });
+  } catch (error: any) {
+    return response.status(500).json({ message: error?.message ?? error });
+  }
+};
 
-    if (user) {
-      return response.status(400).json({ message: "User already exists." });
-    }
-
-    const newUser = await userRepository.create({ username, password });
-    return response.status(201).json(newUser);
+export const signin = async (request: Request, response: Response) => {
+  try {
+    const { user, newToken } = await authService.signin(request.body);
+    return response
+      .status(200)
+      .json({ username: user.username, token: newToken.token });
   } catch (error: any) {
     return response.status(500).json({ message: error?.message ?? error });
   }
