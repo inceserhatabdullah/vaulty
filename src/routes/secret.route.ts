@@ -7,7 +7,9 @@ const router = Router();
 router.get(
   "/",
   timeoutMiddleware(15),
-  (request: Request, response: Response) => {},
+  (request: Request, response: Response) => {
+    return response.json({ message: "selam" });
+  },
 );
 
 router.get("/:id", (request: Request, response: Response) => {});

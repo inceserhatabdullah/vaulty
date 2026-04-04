@@ -1,10 +1,17 @@
 import { Router } from "express";
 import secretRouter from "./secret.route";
 import authRouter from "./auth.route";
+import { verifyTokenMiddleware } from "../middleware/verify-token.middleware";
 
 const apiRouter = Router();
 
-apiRouter.use("/secrets", secretRouter);
+/* public routes */
 apiRouter.use("/auth", authRouter);
+
+/* use verify token middleware for private routes */
+apiRouter.use(verifyTokenMiddleware);
+
+/* private routes */
+apiRouter.use("/secrets", secretRouter);
 
 export default apiRouter;
