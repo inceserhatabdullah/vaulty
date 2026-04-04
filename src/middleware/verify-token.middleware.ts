@@ -29,11 +29,11 @@ export const verifyTokenMiddleware = async (
       userId: decoded.userId,
     });
 
-    console.log(" store ", storedToken);
-
     if (!storedToken) {
       return response.status(401).json({ message: "Unauthorized" });
     }
+
+    request.user = { _id: decoded.userId };
 
     next();
   } catch (error) {

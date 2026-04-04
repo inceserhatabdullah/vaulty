@@ -9,7 +9,11 @@ export interface IUser extends IBaseEntity {
 
 const userSchema = new Schema<IUser>(
   {
-    username: { type: String, required: true, unique: true },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     password: {
       type: String,
       required: true,

@@ -8,7 +8,7 @@ export class AuthService {
     private readonly tokenRepository: TokenRepository,
   ) {}
 
-  async signup(request: { username: string; password: string }) {
+  async signup(request: IUser) {
     const { username, password } = request;
 
     const user = await this.userRepository.findOne({ username });
@@ -31,7 +31,7 @@ export class AuthService {
     return { newUser, newToken };
   }
 
-  async signin(request: { username: string; password: string }) {
+  async signin(request: IUser) {
     const { username, password } = request;
 
     const user = await this.userRepository.findOneWithPassword({ username });
@@ -73,5 +73,6 @@ import {
   UserRepository,
   userRepository,
 } from "../repositories/user.repository";
+import { IUser } from "../models/user.model";
 
 export const authService = new AuthService(userRepository, tokenRepository);

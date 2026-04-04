@@ -1,17 +1,9 @@
 import { Router } from "express";
 import { timeoutMiddleware } from "../middleware/timeout.middleware";
-import type { Request, Response } from "express";
+import { create } from "../controllers/secret.controller";
 
 const router = Router();
 
-router.get(
-  "/",
-  timeoutMiddleware(15),
-  (request: Request, response: Response) => {
-    return response.json({ message: "selam" });
-  },
-);
-
-router.get("/:id", (request: Request, response: Response) => {});
+router.post("/", timeoutMiddleware(15), create);
 
 export default router;
