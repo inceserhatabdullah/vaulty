@@ -38,7 +38,7 @@ userSchema.pre("save", async function (this: HydratedDocument<IUser>) {
     return;
   }
 
-  this.password = await EncryptionService.hashPassword(this.password);
+  this.password = await EncryptionService.hashUserPassword(this.password);
 });
 
 export const User = model<IUser>("User", userSchema);

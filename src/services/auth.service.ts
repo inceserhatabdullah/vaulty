@@ -40,7 +40,7 @@ export class AuthService {
       throw new Error("Invalid credentials.");
     }
 
-    const isPasswordValid = await EncryptionService.comparePassword(
+    const isPasswordValid = await EncryptionService.compareUserPassword(
       password,
       user.password,
     );
