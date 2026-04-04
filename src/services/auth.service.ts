@@ -1,6 +1,6 @@
 import { JwtService } from "../services/jwt.service";
 import { getJwtExpiresAt } from "../functions/jwt.function";
-import { BcryptService } from "../services/bcrypt.service";
+import { EncryptionService } from "./encryption.service";
 
 export class AuthService {
   constructor(
@@ -40,7 +40,7 @@ export class AuthService {
       throw new Error("Invalid credentials.");
     }
 
-    const isPasswordValid = await BcryptService.comparePassword(
+    const isPasswordValid = await EncryptionService.comparePassword(
       password,
       user.password,
     );

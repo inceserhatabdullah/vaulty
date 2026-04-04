@@ -1,6 +1,6 @@
 import { Schema, model, HydratedDocument } from "mongoose";
 import { IBaseEntity } from "../interfaces/base.interface";
-import { BcryptService } from "../services/bcrypt.service";
+import { EncryptionService } from "../services/encryption.service";
 
 export interface IUser extends IBaseEntity {
   username: string;
@@ -38,7 +38,7 @@ userSchema.pre("save", async function (this: HydratedDocument<IUser>) {
     return;
   }
 
-  this.password = await BcryptService.hashPassword(this.password);
+  this.password = await EncryptionService.hashPassword(this.password);
 });
 
 export const User = model<IUser>("User", userSchema);
