@@ -6,11 +6,10 @@ export class UserRepository extends BaseRepository<IUser> {
   constructor() {
     super(User);
   }
-  
-  async findOneWithPassword(filter: QueryFilter<IUser>) {
-    return await this.model.findOne(filter).select('+password').exec();
-  }
 
+  async findOneWithPassword(filter: QueryFilter<IUser>) {
+    return await this.model.findOne(filter).select("+password").exec();
+  }
 }
 
 export const userRepository = new UserRepository();

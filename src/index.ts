@@ -7,7 +7,6 @@ import morgan from "morgan";
 import routes from "./routes";
 import http from "http";
 
-
 const app = express();
 app.use(morgan("combined"));
 app.use(express.json());
