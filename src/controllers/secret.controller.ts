@@ -18,7 +18,21 @@ export const find = async (request: Request, response: Response) => {
 
     const secrets = await secretService.find({ userId });
 
-    return response.status(200).json({ secrets });
+    return response.status(200).json(secrets);
+  } catch (error: any) {
+    return response.status(500).json({ message: error });
+  }
+};
+
+export const findById = async (request: Request, response: Response) => {
+  try {
+    const userId = request.user?._id;
+
+    const secret = await secretService.findOne({
+      _id: request.params.id,
+      userId,
+    });
+    return response.status(200).json(secret);
   } catch (error: any) {
     return response.status(500).json({ message: error });
   }

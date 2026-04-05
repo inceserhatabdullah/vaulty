@@ -28,6 +28,11 @@ export class SecretService {
     const secrets = await this.secretRepository.find(filter);
     return secrets;
   }
+
+  async findOne(filter: QueryFilter<ISecret>) {
+    const secret = await this.secretRepository.findOne(filter);
+    return secret;
+  }
 }
 
 import { QueryFilter } from "mongoose";
