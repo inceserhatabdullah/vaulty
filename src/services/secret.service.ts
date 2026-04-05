@@ -33,6 +33,26 @@ export class SecretService {
     const secret = await this.secretRepository.findOne(filter);
     return secret;
   }
+
+  async decryptSecret(request: Partial<ISecret> & { encryptionKey: string }) {
+    const secret = await this.secretRepository.findOne({ _id: request._id });
+
+    if (!secret) {
+      throw new Error("Secret not found.");
+    }
+
+    if (!secret.encrypted) {
+      return secret.value;
+    }
+
+    const decryptedValue = await EncryptionService.decryptSecretItem({
+      userId: secret.userId,
+      data: secret.value,
+      encryptionKey: request.encryptionKey,
+    });
+
+    return decryptedValue;
+  }
 }
 
 import { QueryFilter } from "mongoose";

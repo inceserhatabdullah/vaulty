@@ -6,7 +6,7 @@ export const signup = async (request: Request, response: Response) => {
     const { newToken } = await authService.signup(request.body);
     return response.status(201).json({ token: newToken.token });
   } catch (error: any) {
-    return response.status(500).json({ message: error });
+    return response.status(400).json({ message: error });
   }
 };
 
@@ -15,6 +15,6 @@ export const signin = async (request: Request, response: Response) => {
     const { newToken } = await authService.signin(request.body);
     return response.status(200).json({ token: newToken.token });
   } catch (error: any) {
-    return response.status(500).json({ message: error });
+    return response.status(400).json({ message: error });
   }
 };
