@@ -5,12 +5,20 @@ export const create = async (request: Request, response: Response) => {
   try {
     const userId = request.user?._id;
 
-    if (!userId) {
-      return response.status(401).json({ message: "Unauthorized" });
-    }
-
     const newSecret = await secretService.create({ ...request.body, userId });
     return response.status(201).json(newSecret);
+  } catch (error: any) {
+    return response.status(500).json({ message: error });
+  }
+};
+
+export const find = async (request: Request, response: Response) => {
+  try {
+    const userId = request.user?._id;
+
+    const secrets = await secretService.find({ userId });
+
+    return response.status(200).json({ secrets });
   } catch (error: any) {
     return response.status(500).json({ message: error });
   }

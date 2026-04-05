@@ -23,8 +23,14 @@ export class SecretService {
     const newSecret = await this.secretRepository.create(request);
     return newSecret;
   }
+
+  async find(filter: QueryFilter<ISecret>) {
+    const secrets = await this.secretRepository.find(filter);
+    return secrets;
+  }
 }
 
+import { QueryFilter } from "mongoose";
 import { ISecret } from "../models/secret.model";
 import {
   SecretRepository,

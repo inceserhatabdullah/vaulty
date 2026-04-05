@@ -13,13 +13,12 @@ app.use(express.json());
 app.set("trust proxy", true);
 
 const port = process.env.PORT;
+app.use("/api/v1", routes);
 
 (async () => {
   let server: http.Server | undefined;
   try {
     await connectMongoose();
-
-    app.use("/api/v1", routes);
 
     server = app.listen(Number(port), `${process.env.DYNAMIC_HOST}`, () => {
       console.log(`Vaulty running on: ${port}`);

@@ -28,7 +28,7 @@ export class AuthService {
       expiresAt: getJwtExpiresAt(),
     });
 
-    return { newUser, newToken };
+    return { newToken };
   }
 
   async signin(request: IUser) {
@@ -61,7 +61,7 @@ export class AuthService {
       expiresAt: getJwtExpiresAt(),
     });
 
-    return { user, newToken };
+    return { newToken };
   }
 }
 

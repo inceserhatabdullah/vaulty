@@ -6,13 +6,15 @@ export class JwtService {
     const secret = getJwtSecret();
     const expiresIn = getJwtExpiresIn();
 
-    const token = jwt.sign({ userId: request.userId }, secret, { expiresIn });
+    const token = jwt.sign({ user: { _id: request.userId } }, secret, {
+      expiresIn,
+    });
     return token;
   }
 
-  static async verifyToken(token: string): Promise<{ userId: string }> {
+  static async verifyToken(token: string): Promise<{ user: { _id: string } }> {
     const secret = getJwtSecret();
     const decoded = jwt.verify(token, secret);
-    return decoded as { userId: string };
+    return decoded as { user: { _id: string } };
   }
 }

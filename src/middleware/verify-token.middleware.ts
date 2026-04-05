@@ -24,16 +24,20 @@ export const verifyTokenMiddleware = async (
       });
     }
 
+    if (!decoded.user._id) {
+      return response.status(401).json({ message: "Unauthorized" });
+    }
+
     const storedToken = await tokenRepository.findOne({
       token,
-      userId: decoded.userId,
+      userId: decoded.user._id,
     });
 
     if (!storedToken) {
       return response.status(401).json({ message: "Unauthorized" });
     }
 
-    request.user = { _id: decoded.userId };
+    request.user = { _id: decoded.user._id };
 
     next();
   } catch (error: any) {
