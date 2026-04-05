@@ -12,6 +12,6 @@ export const create = async (request: Request, response: Response) => {
     const newSecret = await secretService.create({ ...request.body, userId });
     return response.status(201).json(newSecret);
   } catch (error: any) {
-    return response.status(500).json({ message: error?.message ?? error });
+    return response.status(500).json({ message: error });
   }
 };

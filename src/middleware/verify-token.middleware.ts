@@ -36,8 +36,7 @@ export const verifyTokenMiddleware = async (
     request.user = { _id: decoded.userId };
 
     next();
-  } catch (error) {
-    console.log(" error ", error);
-    return response.status(401).json({ message: "Unauthorized" });
+  } catch (error: any) {
+    return response.status(401).json({ message: error });
   }
 };

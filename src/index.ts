@@ -19,21 +19,30 @@ const port = process.env.PORT;
   try {
     await connectMongoose();
 
+    app.use("/api/v1", routes);
+
     server = app.listen(Number(port), `${process.env.DYNAMIC_HOST}`, () => {
       console.log(`Vaulty running on: ${port}`);
     });
 
-    app.use("/api/v1", routes);
+    process.on("SIGINT", () => shutdown(server));
+    process.on("SIGTERM", () => shutdown(server));
   } catch (error) {
-    console.error("Server error: ", error);
+    console.error("\nServer error: ", error);
 
-    if (!server) {
-      process.exit(0);
-    }
+    process.exit(1);
+  }
+})();
 
+const shutdown = async (server: http.Server | undefined) => {
+  console.warn("\nShutdown signal received..");
+
+  if (server) {
     server.close(() => {
-      console.warn("Server shutdown..");
+      console.warn("\nServer shutdown..");
       process.exit(0);
     });
   }
-})();
+
+  process.exit(0);
+};
