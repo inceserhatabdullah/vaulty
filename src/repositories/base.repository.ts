@@ -25,7 +25,9 @@ export abstract class BaseRepository<T> {
     filter: QueryFilter<T>,
     update: UpdateQuery<T>,
   ): Promise<T | null> {
-    return this.model.findOneAndUpdate(filter, update, { new: true }).exec();
+    return this.model
+      .findOneAndUpdate(filter, update, { returnDocument: "after" })
+      .exec();
   }
 
   async updateMany(
@@ -45,11 +47,15 @@ export abstract class BaseRepository<T> {
 
   async softDelete(filter: QueryFilter<T>): Promise<T | null> {
     return this.model
-      .findOneAndUpdate(filter, { isDeleted: true }, { new: true })
+      .findOneAndUpdate(
+        filter,
+        { isDeleted: true },
+        { returnDocument: "after" },
+      )
       .exec();
   }
 
-  async softDeleteMany(filter: QueryFilter<T>): Promise<any> {
+  async softDeleteMany(filter: QueryFilter<T>): Promise<UpdateWriteOpResult> {
     return this.model.updateMany(filter, { isDeleted: true }).exec();
   }
 }

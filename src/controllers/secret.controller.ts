@@ -20,7 +20,7 @@ export const find = async (request: Request, response: Response) => {
 
     return response.status(200).json(secrets);
   } catch (error: any) {
-    return response.status(400).json({ message: error });
+    return response.status(400).json({ message: error.message });
   }
 };
 
@@ -34,7 +34,7 @@ export const findById = async (request: Request, response: Response) => {
     });
     return response.status(200).json(secret);
   } catch (error: any) {
-    return response.status(400).json({ message: error });
+    return response.status(400).json({ message: error.message });
   }
 };
 
@@ -48,6 +48,6 @@ export const decryptSecret = async (request: Request, response: Response) => {
 
     return response.status(200).json({ value: decryptedValue });
   } catch (error: any) {
-    return response.status(400).json({ message: error });
+    return response.status(400).json({ message: error.message });
   }
 };
