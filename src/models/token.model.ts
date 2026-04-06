@@ -10,10 +10,7 @@ export interface IToken extends IBaseEntity {
 const tokenSchema = new Schema<IToken>({
   userId: { type: String, required: true, ref: "User" },
   token: { type: String, required: true, unique: true },
-  expiresAt: { type: Date, required: true },
+  expiresAt: { type: Date, required: true, index: { expires: 0 } },
 });
-
-// remove token when expired
-//tokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const Token = model<IToken>("Token", tokenSchema);

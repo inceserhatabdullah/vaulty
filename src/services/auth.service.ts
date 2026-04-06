@@ -1,7 +1,3 @@
-import { JwtService } from "../services/jwt.service";
-import { getJwtExpiresAt } from "../functions/jwt.function";
-import { EncryptionService } from "./encryption.service";
-
 export class AuthService {
   constructor(
     private readonly userRepository: UserRepository,
@@ -18,17 +14,8 @@ export class AuthService {
     }
 
     const newUser = await this.userRepository.create({ username, password });
-    const generatedToken = await JwtService.generateToken({
-      userId: newUser._id,
-    });
 
-    const newToken = await this.tokenRepository.create({
-      userId: newUser._id,
-      token: generatedToken,
-      expiresAt: getJwtExpiresAt(),
-    });
-
-    return { newToken };
+    return this.generateAndStoreTokens({ userId: newUser._id });
   }
 
   async signin(request: IUser) {
@@ -49,21 +36,38 @@ export class AuthService {
       throw new Error("Invalid credentials.");
     }
 
-    await this.tokenRepository.softDeleteMany({ userId: user._id });
+    return this.generateAndStoreTokens({ userId: user._id });
+  }
 
-    const generatedToken = await JwtService.generateToken({
-      userId: user._id,
+  private async generateAndStoreTokens(request: { userId: string }) {
+    const { userId } = request;
+
+    const accessToken = JwtService.generateToken(
+      {
+        userId,
+      },
+      JwtTypeValue.access_token,
+    );
+
+    const refreshToken = JwtService.generateToken(
+      {
+        userId,
+      },
+      JwtTypeValue.refresh_token,
+    );
+
+    await this.tokenRepository.create({
+      userId,
+      token: refreshToken,
+      expiresAt: JwtService.calculateTokenExpires(JwtTypeValue.refresh_token),
     });
 
-    const newToken = await this.tokenRepository.create({
-      userId: user._id,
-      token: generatedToken,
-      expiresAt: getJwtExpiresAt(),
-    });
-
-    return { newToken };
+    return { accessToken, refreshToken };
   }
 }
+
+import { JwtService } from "../services/jwt.service";
+import { EncryptionService } from "./encryption.service";
 
 import {
   TokenRepository,
@@ -74,5 +78,6 @@ import {
   userRepository,
 } from "../repositories/user.repository";
 import { IUser } from "../models/user.model";
+import { JwtTypeValue } from "../types/jwt.type";
 
 export const authService = new AuthService(userRepository, tokenRepository);

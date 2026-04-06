@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { JwtService } from "../services/jwt.service";
-import { tokenRepository } from "../repositories/token.repository";
+import { JwtTypeValue } from "../types/jwt.type";
 
 export const verifyTokenMiddleware = async (
   request: Request,
@@ -15,7 +15,7 @@ export const verifyTokenMiddleware = async (
     }
 
     const token = header.replace(/^Bearer\s+/i, "");
-    const decoded = await JwtService.verifyToken(token);
+    const decoded = JwtService.verifyToken(token, JwtTypeValue.access_token);
 
     if (!decoded) {
       return response.status(401).json({
@@ -28,19 +28,19 @@ export const verifyTokenMiddleware = async (
       return response.status(401).json({ message: "Unauthorized" });
     }
 
-    const storedToken = await tokenRepository.findOne({
-      token,
-      userId: decoded.user._id,
-    });
+    // const storedToken = await tokenRepository.findOne({
+    //   token,
+    //   userId: decoded.user._id,
+    // });
 
-    if (!storedToken) {
-      return response.status(401).json({ message: "Unauthorized" });
-    }
+    // if (!storedToken) {
+    //   return response.status(401).json({ message: "Unauthorized" });
+    // }
 
     request.user = { _id: decoded.user._id };
 
     next();
   } catch (error: any) {
-    return response.status(401).json({ message: error });
+    return response.status(401).json({ message: error.message });
   }
 };
