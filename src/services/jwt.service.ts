@@ -19,7 +19,7 @@ export class JwtService {
     },
   };
 
-  static generateToken(request: { userId: string }, type: JWTType): string {
+  static generate(request: { userId: string }, type: JWTType): string {
     const configuration = this.jwtConfiguration[type];
     const { secret, expiresIn } = configuration as {
       secret: string;
@@ -33,7 +33,7 @@ export class JwtService {
     return token;
   }
 
-  static verifyToken(token: string, type: JWTType): { user: { _id: string } } {
+  static verify(token: string, type: JWTType): { user: { _id: string } } {
     const configuration = this.jwtConfiguration[type];
     const { secret } = configuration as { secret: string };
 

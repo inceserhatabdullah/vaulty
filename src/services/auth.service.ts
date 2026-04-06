@@ -39,17 +39,42 @@ export class AuthService {
     return this.generateAndStoreTokens({ userId: user._id });
   }
 
+  async refresh(request: { refreshToken: string }) {
+    const { refreshToken } = request;
+
+    const decoded = JwtService.verify(refreshToken, JwtTypeValue.refresh_token);
+
+    const storedToken = await this.tokenRepository.findOne({
+      token: refreshToken,
+      userId: decoded.user._id,
+    });
+
+    console.log(" decoded ", decoded);
+    console.log(" store ", storedToken);
+
+    if (!storedToken) {
+      throw new Error("Invalid refresh token.");
+    }
+
+    await this.tokenRepository.softDelete({
+      token: refreshToken,
+      userId: decoded.user._id,
+    });
+
+    return await this.generateAndStoreTokens({ userId: decoded.user._id });
+  }
+
   private async generateAndStoreTokens(request: { userId: string }) {
     const { userId } = request;
 
-    const accessToken = JwtService.generateToken(
+    const accessToken = JwtService.generate(
       {
         userId,
       },
       JwtTypeValue.access_token,
     );
 
-    const refreshToken = JwtService.generateToken(
+    const refreshToken = JwtService.generate(
       {
         userId,
       },

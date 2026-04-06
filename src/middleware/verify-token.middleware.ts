@@ -15,7 +15,7 @@ export const verifyTokenMiddleware = async (
     }
 
     const token = header.replace(/^Bearer\s+/i, "");
-    const decoded = JwtService.verifyToken(token, JwtTypeValue.access_token);
+    const decoded = JwtService.verify(token, JwtTypeValue.access_token);
 
     if (!decoded) {
       return response.status(401).json({
