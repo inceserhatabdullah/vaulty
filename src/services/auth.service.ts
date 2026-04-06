@@ -49,9 +49,6 @@ export class AuthService {
       userId: decoded.user._id,
     });
 
-    console.log(" decoded ", decoded);
-    console.log(" store ", storedToken);
-
     if (!storedToken) {
       throw new Error("Invalid refresh token.");
     }
