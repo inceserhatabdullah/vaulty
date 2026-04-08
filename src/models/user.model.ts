@@ -5,6 +5,7 @@ import { EncryptionService } from "../services/encryption.service";
 export interface IUser extends IBaseEntity {
   username: string;
   password: string;
+  pin: string;
 }
 
 const userSchema = new Schema<IUser>(
@@ -18,13 +19,11 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
       select: false,
-      validate: {
-        validator: function (value: string) {
-          return /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])(?=.{6,})/.test(value);
-        },
-        message:
-          "Password must be at least 6 characters long and contain at least one letter, one number, and one special character.",
-      },
+    },
+    pin: {
+      type: String,
+      required: true,
+      select: false,
     },
   },
   {
@@ -38,11 +37,13 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.pre("save", async function (this: HydratedDocument<IUser>) {
-  if (!this.isModified("password")) {
-    return;
+  if (this.isModified("password")) {
+    this.password = await EncryptionService.hash(this.password);
   }
 
-  this.password = await EncryptionService.hashUserPassword(this.password);
+  if (this.isModified("pin")) {
+    this.pin = await EncryptionService.hash(this.pin);
+  }
 });
 
 export const User = model<IUser>("User", userSchema);

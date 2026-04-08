@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { secretService } from "../services/secret.service";
+import { requestHeader } from "../constants/request-header.constant";
 
 export const create = async (request: Request, response: Response) => {
   try {
@@ -8,13 +9,13 @@ export const create = async (request: Request, response: Response) => {
     const newSecret = await secretService.create({ ...request.body, userId });
     return response.status(201).json(newSecret);
   } catch (error: any) {
-    return response.status(400).json({ message: error });
+    return response.status(400).json({ message: error.message });
   }
 };
 
 export const find = async (request: Request, response: Response) => {
   try {
-    const userId = request.user?._id;
+    const userId = request.user?._id as string;
 
     const secrets = await secretService.find({ userId });
 
@@ -24,26 +25,14 @@ export const find = async (request: Request, response: Response) => {
   }
 };
 
-export const findById = async (request: Request, response: Response) => {
+export const decrypt = async (request: Request, response: Response) => {
   try {
-    const userId = request.user?._id;
+    const vaultPin = request.headers[requestHeader.vaultPin] as string;
 
-    const secret = await secretService.findOne({
-      _id: request.params.id,
-      userId,
-    });
-    return response.status(200).json(secret);
-  } catch (error: any) {
-    return response.status(400).json({ message: error.message });
-  }
-};
-
-export const decryptSecret = async (request: Request, response: Response) => {
-  try {
-    const decryptedValue = await secretService.decryptSecret({
+    const decryptedValue = await secretService.decrypt({
       _id: request.params.id as string,
       userId: request.user?._id,
-      encryptionKey: request.body.encryptionKey,
+      vaultPin,
     });
 
     return response.status(200).json({ value: decryptedValue });

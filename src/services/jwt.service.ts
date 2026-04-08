@@ -10,7 +10,7 @@ export class JwtService {
     [JwtTypeValue.access_token]: {
       secret: process.env.ACCESS_TOKEN_SECRET ?? "super_secret",
       expiresIn: (process.env.ACCESS_TOKEN_EXPIRES_IN ??
-        "15m") as ms.StringValue,
+        "1h") as ms.StringValue,
     },
     [JwtTypeValue.refresh_token]: {
       secret: process.env.REFRESH_TOKEN_SECRET ?? "super_secret",

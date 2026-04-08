@@ -2,11 +2,14 @@ import mongoose from "mongoose";
 import { globalEntityPlugin } from "./config/mongoose.config";
 mongoose.plugin(globalEntityPlugin);
 
-const defaultMongooseHost = "mongodb://127.0.0.1:27017/vaulty";
-
 export const connectMongoose = async () => {
-  const mongooseHost = process.env.MONGO_URI ?? defaultMongooseHost;
-  await mongoose.connect(mongooseHost);
+  const mongooseHost = process.env.MONGO_URI;
 
-  console.log(`Connected to ${mongooseHost}`);
+  if (!mongooseHost) {
+    throw new Error("MONGO_URI environment variable is not set");
+  }
+
+  const { connection } = await mongoose.connect(mongooseHost);
+
+  console.log(`Database connected successfully. ${connection.host}:${connection.port}/${connection.name}`);
 };

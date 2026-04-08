@@ -2,23 +2,23 @@ import { Router } from "express";
 import { timeoutMiddleware } from "../middleware/timeout.middleware";
 import {
   create,
-  decryptSecret,
+  decrypt,
   find,
-  findById,
 } from "../controllers/secret.controller";
 import { validateZod } from "../middleware/validate-zod.middleware";
-import { decryptSecretRequestDto } from "../dtos/decrypt-secret.request.dto";
+import { createSecretRequestDto } from "../dtos/create-secret.request.dto";
+import { requestHeaderMiddleware } from "../middleware/request-header.middleware";
+import { requestHeader } from "../constants/request-header.constant";
 
 const router = Router();
 
 router.get("/", timeoutMiddleware(5), find);
-router.get("/:id", timeoutMiddleware(2), findById);
 router.get(
   "/decrypt/:id",
-  validateZod(decryptSecretRequestDto),
+  requestHeaderMiddleware(requestHeader.vaultPin),
   timeoutMiddleware(2),
-  decryptSecret,
+  decrypt,
 );
-router.post("/", create);
+router.post("/", validateZod(createSecretRequestDto), create);
 
 export default router;
