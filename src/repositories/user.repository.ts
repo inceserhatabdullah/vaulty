@@ -7,5 +7,4 @@ export class UserRepository extends BaseRepository<IUser> {
   }
 }
 
-
-export const userRepository = new UserRepository(BaseRepository);
+export const userRepository = new UserRepository();
