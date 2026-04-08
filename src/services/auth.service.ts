@@ -5,7 +5,7 @@ export class AuthService {
   ) {}
 
   async signup(request: IUser) {
-    const { username, password } = request;
+    const { username, password, pin } = request;
 
     const user = await this.userRepository.findOne({ username });
 
@@ -13,7 +13,11 @@ export class AuthService {
       throw new Error("User already exists.");
     }
 
-    const newUser = await this.userRepository.create({ username, password });
+    const newUser = await this.userRepository.create({
+      username,
+      password,
+      pin,
+    });
 
     return this.generateAndStoreTokens({ userId: newUser._id });
   }
@@ -21,16 +25,16 @@ export class AuthService {
   async signin(request: IUser) {
     const { username, password } = request;
 
-    const user = await this.userRepository.findOneWithPassword({ username });
+    const user = await this.userRepository.findOne({ username }, "+password");
 
     if (!user) {
       throw new Error("Invalid credentials.");
     }
 
-    const isPasswordValid = await EncryptionService.compareUserPassword(
+    const isPasswordValid = await EncryptionService.verify({
       password,
-      user.password,
-    );
+      hashedPassword: user.password,
+    });
 
     if (!isPasswordValid) {
       throw new Error("Invalid credentials.");

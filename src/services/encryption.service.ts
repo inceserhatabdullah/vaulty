@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import argon2 from "argon2";
 import crypto from "crypto";
 
@@ -15,64 +14,54 @@ export class EncryptionService {
     raw: true, // return raw buffer
   };
 
-  static async hashUserPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(password, salt);
-
-    return hashed;
+  static async hash(password: string): Promise<string> {
+    return await argon2.hash(password);
   }
 
-  static async compareUserPassword(
-    password: string,
-    hashedPassword: string,
-  ): Promise<boolean> {
-    return bcrypt.compare(password, hashedPassword);
+  static async verify(request: {
+    password: string;
+    hashedPassword: string;
+  }): Promise<boolean> {
+    const { password, hashedPassword } = request;
+    return await argon2.verify(hashedPassword, password);
   }
 
-  static async encryptSecretItem(request: {
-    userId: string;
-    encryptionKey: string;
-    data: string;
-  }): Promise<string> {
-    const hashed = await argon2.hash(request.encryptionKey, {
+  static async encrypt(request: { password: string; data: string }) {
+    const { password, data } = request;
+
+    const hash = await argon2.hash(password, {
       ...this.argon2Config,
-      salt: Buffer.from(request.userId),
+      salt: Buffer.from(process.env.USER_VAULTY_PIN as string),
     });
 
     const iv = crypto.randomBytes(16);
 
-    const cipher = crypto.createCipheriv(this.ENCRYPTION_ALGORITHM, hashed, iv);
-    const encrypted =
-      cipher.update(request.data, "utf8", "hex") + cipher.final("hex");
-
+    const cipher = crypto.createCipheriv(this.ENCRYPTION_ALGORITHM, hash, iv);
+    const encrypted = cipher.update(data, "utf8", "hex") + cipher.final("hex");
     return iv.toString("hex") + ":" + encrypted;
   }
 
-  static async decryptSecretItem(request: {
-    userId: string;
-    encryptionKey: string;
+  static async decrypt(request: {
+    password: string;
     data: string;
   }): Promise<string> {
-    const [ivHex, encrypted] = request.data.split(":");
-    if (!ivHex || !encrypted) {
-      throw new Error("Invalid encrypted data.");
-    }
+    const { password, data } = request;
 
-    const hashed = await argon2.hash(request.encryptionKey, {
+    const hash = await argon2.hash(password, {
       ...this.argon2Config,
-      salt: Buffer.from(request.userId),
+      salt: Buffer.from(process.env.USER_VAULTY_PIN as string),
     });
 
-    const iv = Buffer.from(ivHex, "hex");
+    const [ivHex, encrypted] = data.split(":");
+    if (!ivHex || !encrypted) {
+      throw new Error("Invalid encrypted data");
+    }
 
     const decipher = crypto.createDecipheriv(
       this.ENCRYPTION_ALGORITHM,
-      hashed,
-      iv,
+      hash,
+      Buffer.from(ivHex, "hex"),
     );
-    const decrypted =
-      decipher.update(encrypted, "hex", "utf8") + decipher.final("utf8");
-
-    return decrypted;
+    return decipher.update(encrypted, "hex", "utf8") + decipher.final("utf8");
   }
 }

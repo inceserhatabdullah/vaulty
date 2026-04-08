@@ -3,12 +3,15 @@ import { Model, QueryFilter, UpdateQuery, UpdateWriteOpResult } from "mongoose";
 export abstract class BaseRepository<T> {
   constructor(protected model: Model<T>) {}
 
-  async find(filter: QueryFilter<T>): Promise<T[]> {
-    return this.model.find(filter).exec();
+  async find(filter: QueryFilter<T>, select: string = ""): Promise<T[]> {
+    return this.model.find(filter).select(select).exec();
   }
 
-  async findOne(filter: QueryFilter<T>): Promise<T | null> {
-    return this.model.findOne(filter).exec();
+  async findOne(
+    filter: QueryFilter<T>,
+    select: string = "",
+  ): Promise<T | null> {
+    return this.model.findOne(filter).select(select).exec();
   }
 
   async create(data: Partial<T>): Promise<T> {
@@ -57,5 +60,9 @@ export abstract class BaseRepository<T> {
 
   async softDeleteMany(filter: QueryFilter<T>): Promise<UpdateWriteOpResult> {
     return this.model.updateMany(filter, { isDeleted: true }).exec();
+  }
+
+  async aggregate(pipeline: any[]): Promise<any[]> {
+    return this.model.aggregate(pipeline).exec();
   }
 }

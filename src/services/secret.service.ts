@@ -1,41 +1,65 @@
 export class SecretService {
-  constructor(private readonly secretRepository: SecretRepository) {}
+  constructor(
+    private readonly secretRepository: SecretRepository,
+    private readonly userRepository: UserRepository,
+  ) {}
 
-  async create(request: ISecret & { encryptionKey: string }) {
+  async create(request: ISecret) {
     const secret = await this.secretRepository.findOne({ key: request.key });
 
     if (secret) {
       throw new Error("Secret with this key already exists.");
     }
 
-    if (!request.encrypted && !request.encryptionKey) {
-      throw new Error("Encryption key is required for encrypted secrets.");
+    if (request.encrypted) {
+      const user = await this.userRepository.findOne(
+        { _id: request.userId },
+        "+pin",
+      );
+
+      if (!user) {
+        throw new Error("User not found.");
+      }
+
+      const encrypted = await EncryptionService.encrypt({
+        password: user.pin,
+        data: request.value,
+      });
+      request.value = encrypted;
     }
 
-    const encryptedValue = await EncryptionService.encryptSecretItem({
-      userId: request.userId,
-      data: request.value,
-      encryptionKey: request.encryptionKey,
-    });
-
-    request.value = encryptedValue;
-
     const newSecret = await this.secretRepository.create(request);
-    return newSecret;
+    return { _id: newSecret._id };
   }
 
-  async find(filter: QueryFilter<ISecret>) {
-    const secrets = await this.secretRepository.find(filter);
+  async find(request: { userId: string }) {
+    const secrets = await this.secretRepository.find(request);
     return secrets;
   }
 
-  async findOne(filter: QueryFilter<ISecret>) {
-    const secret = await this.secretRepository.findOne(filter);
-    return secret;
-  }
+  async decrypt(request: Partial<ISecret> & { vaultPin: string }) {
+    const user = await this.userRepository.findOne(
+      { _id: request.userId },
+      "+pin",
+    );
 
-  async decryptSecret(request: Partial<ISecret> & { encryptionKey: string }) {
-    const secret = await this.secretRepository.findOne({ _id: request._id });
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    const isVerified = await EncryptionService.verify({
+      password: request.vaultPin,
+      hashedPassword: user.pin,
+    });
+
+    if (!isVerified) {
+      throw new Error("Invalid vault pin.");
+    }
+
+    const secret = await this.secretRepository.findOne(
+      { _id: request._id, userId: user._id },
+      "+value",
+    );
 
     if (!secret) {
       throw new Error("Secret not found.");
@@ -45,13 +69,12 @@ export class SecretService {
       return secret.value;
     }
 
-    const decryptedValue = await EncryptionService.decryptSecretItem({
-      userId: secret.userId,
+    const decrypted = await EncryptionService.decrypt({
+      password: user.pin,
       data: secret.value,
-      encryptionKey: request.encryptionKey,
     });
 
-    return decryptedValue;
+    return decrypted;
   }
 }
 
@@ -61,6 +84,13 @@ import {
   SecretRepository,
   secretRepository,
 } from "../repositories/secret.repository";
+import {
+  UserRepository,
+  userRepository,
+} from "../repositories/user.repository";
 import { EncryptionService } from "./encryption.service";
 
-export const secretService = new SecretService(secretRepository);
+export const secretService = new SecretService(
+  secretRepository,
+  userRepository,
+);

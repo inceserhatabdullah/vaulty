@@ -13,7 +13,7 @@ export interface ISecret extends IBaseEntity {
 const secretSchema = new Schema<ISecret>({
   userId: { type: String, required: true },
   key: { type: String, required: true, unique: true },
-  value: { type: String, required: true },
+  value: { type: String, required: true, select: false },
   title: { type: String, required: false },
   category: { type: String, required: false, default: "General" },
   encrypted: { type: Boolean, required: true, default: false },
