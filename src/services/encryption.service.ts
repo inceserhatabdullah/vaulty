@@ -1,5 +1,6 @@
 import argon2 from "argon2";
 import crypto from "crypto";
+import { generate } from "generate-password";
 
 export class EncryptionService {
   private static readonly ENCRYPTION_ALGORITHM =
@@ -63,5 +64,16 @@ export class EncryptionService {
       Buffer.from(ivHex, "hex"),
     );
     return decipher.update(encrypted, "hex", "utf8") + decipher.final("utf8");
+  }
+
+  static generatePassword(): string {
+    return generate({
+      length: 20,
+      numbers: true,
+      symbols: true,
+      uppercase: true,
+      lowercase: true,
+      strict: true,
+    });
   }
 }
