@@ -37,3 +37,12 @@ export const refresh = async (request: Request, response: Response) => {
     return response.status(400).json({ message: error.message });
   }
 };
+
+export const generatePassword = (request: Request, response: Response) => {
+  try {
+    const password = authService.generatePassword();
+    return response.status(200).json({ password });
+  } catch (error: any) {
+    return response.status(400).json({ message: error.message });
+  }
+};

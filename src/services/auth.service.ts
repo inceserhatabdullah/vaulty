@@ -90,6 +90,10 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+  
+  generatePassword(): string {
+    return EncryptionService.generatePassword();
+  }
 }
 
 import { JwtService } from "../services/jwt.service";
