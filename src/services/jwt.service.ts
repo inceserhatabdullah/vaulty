@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import ms from "ms";
 import { JWTType, JwtTypeValue } from "../types/jwt.type";
 
@@ -37,12 +37,34 @@ export class JwtService {
     const configuration = this.jwtConfiguration[type];
     const { secret } = configuration as { secret: string };
 
-    const decoded = jwt.verify(token, secret);
-    return decoded as { user: { _id: string } };
+    const verified = jwt.verify(token, secret);
+    return verified as { user: { _id: string } };
   }
 
-  static calculateTokenExpires(type: JWTType): Date {
+  static decode(token: string): JwtPayload {
+    return jwt.decode(token) as JwtPayload;
+  }
+
+  static calculateExpiry(payload: JwtPayload): Date {
+    return new Date(1000 * payload.exp!);
+  }
+
+  static getExpiry(type: JWTType) {
     const configuration = this.jwtConfiguration[type];
-    return new Date(Date.now() + ms(configuration.expiresIn as ms.StringValue));
+    const { expiresIn } = configuration as { expiresIn: ms.StringValue };
+    return ms(expiresIn);
+  }
+
+  static getTokenCookie(type: JWTType) {
+    const configuration = this.jwtConfiguration[type];
+    const { expiresIn } = configuration as { expiresIn: ms.StringValue };
+
+    return {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict" as const,
+      path: "/api/v1/auth/refresh",
+      maxAge: ms(expiresIn),
+    };
   }
 }

@@ -15,29 +15,21 @@ export const verifyTokenMiddleware = async (
     }
 
     const token = header.replace(/^Bearer\s+/i, "");
-    const decoded = JwtService.verify(token, JwtTypeValue.access_token);
+    const verified = JwtService.verify(token, JwtTypeValue.access_token);
 
-    if (!decoded) {
+    if (!verified) {
       return response.status(401).json({
         message: "Token expired or invalid",
         code: "TOKEN_EXPIRED_OR_INVALID",
       });
     }
 
-    if (!decoded.user._id) {
+    if (!verified.user._id) {
       return response.status(401).json({ message: "Unauthorized" });
     }
 
-    // const storedToken = await tokenRepository.findOne({
-    //   token,
-    //   userId: decoded.user._id,
-    // });
-
-    // if (!storedToken) {
-    //   return response.status(401).json({ message: "Unauthorized" });
-    // }
-
-    request.user = { _id: decoded.user._id };
+    request.user = { _id: verified.user._id };
+    request.authorization = { accessToken: token };
 
     next();
   } catch (error: any) {
