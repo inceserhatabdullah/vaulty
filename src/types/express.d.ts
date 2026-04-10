@@ -3,5 +3,9 @@ declare namespace Express {
     user?: {
       _id: string;
     };
+    session?: any;
+    authorization?: {
+      accessToken: string;
+    };
   }
 }
