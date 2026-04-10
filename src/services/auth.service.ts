@@ -5,8 +5,10 @@ import { IUser } from "../models/user.model";
 import { EncryptionService } from "./encryption.service";
 import { JwtTypeValue } from "../types/jwt.type";
 import { JwtService } from "./jwt.service";
+import { redisService } from "./redis.service";
 
 export class AuthService {
+
   constructor() {}
 
   async signup(request: Request) {
@@ -108,6 +110,8 @@ export class AuthService {
       expiresAt,
     } = this.generateAndStoreTokens({ userId: decoded.user._id });
 
+    await this.setBlackListAccessToken(request.authorization!.accessToken);
+
     await sessionService.update(
       {
         userId: decoded.user._id,
@@ -159,22 +163,39 @@ export class AuthService {
 
   async logout(request: Request, response: Response) {
     const clearAll = request.query?.all === "true";
-    const decoded = JwtService.verify(
+    const verified = JwtService.verify(
       request.authorization!.accessToken,
       JwtTypeValue.access_token,
     );
 
+    await this.setBlackListAccessToken(request.authorization!.accessToken);
+
     if (clearAll) {
-      await sessionService.softDeleteMany({ userId: decoded.user._id });
+      await sessionService.softDeleteMany({ userId: verified.user._id });
     } else {
       await sessionService.softDelete({
-        userId: decoded.user._id,
+        userId: verified.user._id,
         "information.os.name": request.session.os.name,
         "information.browser.name": request.session.browser.name,
       });
     }
 
     this.clearCookie(response);
+  }
+
+  async setBlackListAccessToken(accessToken: string) {
+    const payload = JwtService.decode(accessToken);
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = payload.exp! - now + 10;
+    const blackListKey = redisService.getBlackListedAccessTokenConstant(accessToken);
+
+    if (expiresIn > 0) {
+      await redisService.set(
+        blackListKey,
+        true,
+        expiresIn,
+      );
+    }
   }
 
   generatePassword(): string {

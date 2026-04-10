@@ -10,19 +10,19 @@ import { validateZod } from "../middleware/validate-zod.middleware";
 import { timeoutMiddleware } from "../middleware/timeout.middleware";
 import { signupRequestDto } from "../dtos/signup.request.dto";
 import { signinRequestDto } from "../dtos/signin.request.dto";
-import { verifyTokenMiddleware } from "../middleware/verify-token.middleware";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = Router();
 
 router.post("/signup", validateZod(signupRequestDto), signup);
 router.post("/signin", validateZod(signinRequestDto), signin);
-router.patch("/refresh", verifyTokenMiddleware, timeoutMiddleware(2), refresh);
+router.patch("/refresh", authMiddleware, timeoutMiddleware(2), refresh);
 router.get(
   "/generate-password",
-  verifyTokenMiddleware,
+  authMiddleware,
   timeoutMiddleware(1),
   generatePassword,
 );
-router.get("/logout", verifyTokenMiddleware, timeoutMiddleware(2), logout);
+router.get("/logout", authMiddleware, timeoutMiddleware(2), logout);
 
 export default router;

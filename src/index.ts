@@ -1,6 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config({ path: ".env" });
-
 import { connectMongoose } from "./database/mongoose.database";
 import express from "express";
 import morgan from "morgan";
