@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { JwtService } from "../services/jwt.service";
 import { JwtTypeValue } from "../types/jwt.type";
+import { redisService } from "../services/redis.service";
 
-export const verifyTokenMiddleware = async (
+export const authMiddleware = async (
   request: Request,
   response: Response,
   next: NextFunction,
@@ -15,6 +16,18 @@ export const verifyTokenMiddleware = async (
     }
 
     const token = header.replace(/^Bearer\s+/i, "");
+
+    // black list access token after refresh and logout
+    const blackListKey = redisService.getBlackListedAccessTokenConstant(token);
+    const isBlacklisted = await redisService.get(blackListKey);
+
+    if (isBlacklisted === "true") {
+      return response.status(401).json({
+        message: "Token has been revoked. Please login again.",
+        code: "TOKEN_REVOKED",
+      });
+    }
+
     const verified = JwtService.verify(token, JwtTypeValue.access_token);
 
     if (!verified) {

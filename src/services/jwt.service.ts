@@ -49,12 +49,6 @@ export class JwtService {
     return new Date(1000 * payload.exp!);
   }
 
-  static getExpiry(type: JWTType) {
-    const configuration = this.jwtConfiguration[type];
-    const { expiresIn } = configuration as { expiresIn: ms.StringValue };
-    return ms(expiresIn);
-  }
-
   static getTokenCookie(type: JWTType) {
     const configuration = this.jwtConfiguration[type];
     const { expiresIn } = configuration as { expiresIn: ms.StringValue };
