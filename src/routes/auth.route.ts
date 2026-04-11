@@ -6,6 +6,7 @@ import {
   generatePassword,
   logout,
   session,
+  deleteSession,
 } from "../controllers/auth.controller";
 import { validateZod } from "../middleware/validate-zod.middleware";
 import { timeoutMiddleware } from "../middleware/timeout.middleware";
@@ -26,5 +27,11 @@ router.get(
 );
 router.get("/logout", authMiddleware, timeoutMiddleware(), logout);
 router.get("/sessions", authMiddleware, timeoutMiddleware(), session);
+router.delete(
+  "/sessions/:id",
+  authMiddleware,
+  timeoutMiddleware(),
+  deleteSession,
+);
 
 export default router;

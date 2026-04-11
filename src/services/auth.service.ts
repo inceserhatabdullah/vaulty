@@ -6,6 +6,7 @@ import { EncryptionService } from "./encryption.service";
 import { JwtTypeValue } from "../types/jwt.type";
 import { JwtService } from "./jwt.service";
 import { redisService } from "./redis.service";
+import { generateUUID } from "../functions/generate-uuid.function";
 
 export class AuthService {
   constructor() {}
@@ -25,10 +26,13 @@ export class AuthService {
       pin,
     });
 
+    const sessionId: string = generateUUID();
+
     const { accessToken, refreshToken, expiresAt } =
-      this.generateAndStoreTokens({ userId: newUser._id });
+      this.generateAndStoreTokens({ userId: newUser._id, sessionId });
 
     await sessionService.create({
+      _id: sessionId,
       token: refreshToken,
       userId: newUser._id,
       expiresAt,
@@ -56,14 +60,23 @@ export class AuthService {
       throw new Error("Invalid credentials.");
     }
 
+    const session = await sessionService.findOne({
+      userId: user._id,
+      "information.os.name": request.session.os.name,
+      "information.browser.name": request.session.browser.name,
+    });
+
+    const sessionId = session ? session._id : generateUUID();
+
     const { accessToken, refreshToken, expiresAt } =
-      this.generateAndStoreTokens({ userId: user._id });
+      this.generateAndStoreTokens({
+        userId: user._id,
+        sessionId,
+      });
 
     await sessionService.update(
       {
-        userId: user._id,
-        "information.os.name": request.session.os.name,
-        "information.browser.name": request.session.browser.name,
+        _id: sessionId,
       },
       {
         expiresAt,
@@ -92,7 +105,7 @@ export class AuthService {
     });
 
     if (!session) {
-      await sessionService.softDeleteMany({
+      await sessionService.softDelete({
         userId: decoded.user._id,
         "information.os.name": request.session.os.name,
         "information.browser.name": request.session.browser.name,
@@ -107,16 +120,16 @@ export class AuthService {
       accessToken,
       refreshToken: newRefreshToken,
       expiresAt,
-    } = this.generateAndStoreTokens({ userId: decoded.user._id });
+    } = this.generateAndStoreTokens({
+      userId: decoded.user._id,
+      sessionId: session._id,
+    });
 
     await this.setBlackListAccessToken(request.authorization!.accessToken);
 
     await sessionService.update(
       {
-        userId: decoded.user._id,
-        token: refreshToken,
-        "information.os.name": request.session.os.name,
-        "information.browser.name": request.session.browser.name,
+        _id: session._id,
       },
       {
         expiresAt,
@@ -128,12 +141,16 @@ export class AuthService {
     return { accessToken, refreshToken: newRefreshToken };
   }
 
-  private generateAndStoreTokens(request: { userId: string }) {
-    const { userId } = request;
+  private generateAndStoreTokens(request: {
+    userId: string;
+    sessionId: string;
+  }) {
+    const { userId, sessionId } = request;
 
     const accessToken = JwtService.generate(
       {
         userId,
+        sessionId,
       },
       JwtTypeValue.access_token,
     );
@@ -141,11 +158,12 @@ export class AuthService {
     const refreshToken = JwtService.generate(
       {
         userId,
+        sessionId,
       },
       JwtTypeValue.refresh_token,
     );
 
-    const decoded = JwtService.decode(refreshToken);
+    const decoded = JwtService.verify(refreshToken, JwtTypeValue.refresh_token);
     const expiresAt = JwtService.calculateExpiry(decoded);
 
     return { accessToken, refreshToken, expiresAt };
@@ -173,9 +191,7 @@ export class AuthService {
       await sessionService.softDeleteMany({ userId: verified.user._id });
     } else {
       await sessionService.softDelete({
-        userId: verified.user._id,
-        "information.os.name": request.session.os.name,
-        "information.browser.name": request.session.browser.name,
+        _id: verified.session._id,
       });
     }
 
@@ -183,7 +199,7 @@ export class AuthService {
   }
 
   async setBlackListAccessToken(accessToken: string) {
-    const payload = JwtService.decode(accessToken);
+    const payload = JwtService.verify(accessToken, JwtTypeValue.access_token);
     const now = Math.floor(Date.now() / 1000);
     const expiresIn = payload.exp! - now + 10;
     const blackListKey =

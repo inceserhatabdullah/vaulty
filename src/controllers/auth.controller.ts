@@ -64,3 +64,15 @@ export const session = async (request: Request, response: Response) => {
     return response.status(400).json({ message: error.message });
   }
 };
+
+export const deleteSession = async (request: Request, response: Response) => {
+  try {
+    const { id: _id } = request.params;
+    const user = request.authorization?.user;
+    await sessionService.softDelete({ _id, userId: user?._id });
+
+    return response.status(204).send();
+  } catch (error: any) {
+    return response.status(400).json({ message: error.message });
+  }
+};
