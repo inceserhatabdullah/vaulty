@@ -1,9 +1,8 @@
 import { z } from "zod/v3";
 import { userDTO } from "./user.dto";
 
-export const signinRequestDto = z.object({
+export const userChangePasswordRequestDto = z.object({
   body: z.object({
-    username: userDTO.username,
     password: userDTO.password,
   }),
 });

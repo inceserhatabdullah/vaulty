@@ -1,10 +1,10 @@
 declare namespace Express {
   interface Request {
-    user?: {
-      _id: string;
-    };
     session?: any;
     authorization?: {
+      user?: {
+        _id: string;
+      };
       accessToken: string;
     };
   }

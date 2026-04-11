@@ -41,8 +41,7 @@ export const authMiddleware = async (
       return response.status(401).json({ message: "Unauthorized" });
     }
 
-    request.user = { _id: verified.user._id };
-    request.authorization = { accessToken: token };
+    request.authorization = { user: { _id:verified.user._id, },  accessToken: token };
 
     next();
   } catch (error: any) {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, request } from "express";
 
-export function timeoutMiddleware(seconds: number) {
+export function timeoutMiddleware(seconds: number = 5) {
   return (request: Request, response: Response, next: NextFunction) => {
     const timer = setTimeout(() => {
       if (!response.headersSent) {

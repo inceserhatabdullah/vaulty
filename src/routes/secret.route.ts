@@ -12,11 +12,11 @@ import { requestHeader } from "../constants/request-header.constant";
 
 const router = Router();
 
-router.get("/", timeoutMiddleware(5), find);
+router.get("/", timeoutMiddleware(), find);
 router.get(
   "/decrypt/:id",
   requestHeaderMiddleware(requestHeader.vaultPin),
-  timeoutMiddleware(2),
+  timeoutMiddleware(),
   decrypt,
 );
 router.post("/", validateZod(createSecretRequestDto), create);

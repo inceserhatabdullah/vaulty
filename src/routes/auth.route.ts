@@ -20,9 +20,9 @@ router.patch("/refresh", authMiddleware, timeoutMiddleware(2), refresh);
 router.get(
   "/generate-password",
   authMiddleware,
-  timeoutMiddleware(1),
+  timeoutMiddleware(),
   generatePassword,
 );
-router.get("/logout", authMiddleware, timeoutMiddleware(2), logout);
+router.get("/logout", authMiddleware, timeoutMiddleware(), logout);
 
 export default router;

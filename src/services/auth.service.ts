@@ -8,7 +8,6 @@ import { JwtService } from "./jwt.service";
 import { redisService } from "./redis.service";
 
 export class AuthService {
-
   constructor() {}
 
   async signup(request: Request) {
@@ -157,7 +156,7 @@ export class AuthService {
     response.cookie("refreshToken", token, cookie);
   }
 
-  private clearCookie(response: Response) {
+  clearCookie(response: Response) {
     response.clearCookie("refreshToken", { path: "/api/v1/auth/refresh" });
   }
 
@@ -187,14 +186,11 @@ export class AuthService {
     const payload = JwtService.decode(accessToken);
     const now = Math.floor(Date.now() / 1000);
     const expiresIn = payload.exp! - now + 10;
-    const blackListKey = redisService.getBlackListedAccessTokenConstant(accessToken);
+    const blackListKey =
+      redisService.getBlackListedAccessTokenConstant(accessToken);
 
     if (expiresIn > 0) {
-      await redisService.set(
-        blackListKey,
-        true,
-        expiresIn,
-      );
+      await redisService.set(blackListKey, true, expiresIn);
     }
   }
 
