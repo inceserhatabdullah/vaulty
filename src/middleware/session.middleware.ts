@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { UAParser } from "ua-parser-js";
+import { GeoLocationService } from "../services/geo-location.service";
 
 export const parseUserAgentMiddleware = (
   request: Request,
@@ -8,6 +9,8 @@ export const parseUserAgentMiddleware = (
 ) => {
   const parser = new UAParser(request.headers["user-agent"]);
   const { cpu, device, os, engine, browser, ua } = parser.getResult();
+  const ip = GeoLocationService.getClientIp(request);
+  const location = GeoLocationService.getLocation(ip);
 
   const configuration = {
     cpu,
@@ -16,7 +19,8 @@ export const parseUserAgentMiddleware = (
     engine,
     browser,
     ua,
-    ip: request.ip,
+    ip,
+    location,
   };
 
   request.session = configuration;
