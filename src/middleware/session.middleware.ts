@@ -22,8 +22,6 @@ export const parseUserAgentMiddleware = (
     ip,
     location,
   };
-  
-  console.log(configuration)
 
   request.session = configuration;
   next();
