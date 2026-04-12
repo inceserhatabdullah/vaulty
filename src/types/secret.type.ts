@@ -7,4 +7,3 @@ export type UpdateSecretRequestType = z.infer<typeof SecretRequestDto.update>;
 
 
 // TODO: functiion'larda kullan.
-// controller da =>  const body = dto.parse(req.body);
