@@ -3,6 +3,7 @@ import secretRouter from "./secret.route";
 import authRouter from "./auth.route";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { parseUserAgentMiddleware } from "../middleware/session.middleware";
+import userRouter from "./user.route";
 
 const apiRouter = Router();
 
@@ -15,5 +16,6 @@ apiRouter.use(authMiddleware);
 
 /* private routes */
 apiRouter.use("/secrets", secretRouter);
+apiRouter.use("/users", userRouter);
 
 export default apiRouter;

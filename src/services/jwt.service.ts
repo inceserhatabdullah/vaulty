@@ -19,30 +19,36 @@ export class JwtService {
     },
   };
 
-  static generate(request: { userId: string }, type: JWTType): string {
+  static generate(
+    request: { userId: string; sessionId: string },
+    type: JWTType,
+  ): string {
     const configuration = this.jwtConfiguration[type];
     const { secret, expiresIn } = configuration as {
       secret: string;
       expiresIn: ms.StringValue;
     };
 
-    const token = jwt.sign({ user: { _id: request.userId } }, secret, {
-      expiresIn,
-    });
+    const token = jwt.sign(
+      { user: { _id: request.userId }, session: { _id: request.sessionId } },
+      secret,
+      {
+        expiresIn,
+      },
+    );
 
     return token;
   }
 
-  static verify(token: string, type: JWTType): { user: { _id: string } } {
+  static verify(
+    token: string,
+    type: JWTType,
+  ) {
     const configuration = this.jwtConfiguration[type];
     const { secret } = configuration as { secret: string };
 
     const verified = jwt.verify(token, secret);
-    return verified as { user: { _id: string } };
-  }
-
-  static decode(token: string): JwtPayload {
-    return jwt.decode(token) as JwtPayload;
+    return verified as JwtPayload;
   }
 
   static calculateExpiry(payload: JwtPayload): Date {

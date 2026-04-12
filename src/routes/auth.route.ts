@@ -5,24 +5,32 @@ import {
   refresh,
   generatePassword,
   logout,
+  session,
+  deleteSession,
 } from "../controllers/auth.controller";
 import { validateZod } from "../middleware/validate-zod.middleware";
 import { timeoutMiddleware } from "../middleware/timeout.middleware";
-import { signupRequestDto } from "../dtos/signup.request.dto";
-import { signinRequestDto } from "../dtos/signin.request.dto";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { AuthRequestDto } from "../dtos/auth.dto";
 
 const router = Router();
 
-router.post("/signup", validateZod(signupRequestDto), signup);
-router.post("/signin", validateZod(signinRequestDto), signin);
+router.post("/signup", validateZod(AuthRequestDto.signup), signup);
+router.post("/signin", validateZod(AuthRequestDto.signin), signin);
 router.patch("/refresh", authMiddleware, timeoutMiddleware(2), refresh);
 router.get(
   "/generate-password",
   authMiddleware,
-  timeoutMiddleware(1),
+  timeoutMiddleware(),
   generatePassword,
 );
-router.get("/logout", authMiddleware, timeoutMiddleware(2), logout);
+router.get("/logout", authMiddleware, timeoutMiddleware(), logout);
+router.get("/sessions", authMiddleware, timeoutMiddleware(), session);
+router.delete(
+  "/sessions/:id",
+  authMiddleware,
+  timeoutMiddleware(),
+  deleteSession,
+);
 
 export default router;

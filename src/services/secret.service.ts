@@ -4,6 +4,53 @@ export class SecretService {
     private readonly userRepository: UserRepository,
   ) {}
 
+  async update(filter: QueryFilter<ISecret>, update: Partial<ISecret>) {
+    const secret = await this.secretRepository.findOne(filter, "+value");
+
+    if (!secret) {
+      throw new Error("Secret not found.");
+    }
+
+    if (update?.encrypted) {
+      const user = await this.userRepository.findOne(
+        { _id: secret.userId },
+        "+pin",
+      );
+
+      if (!user) {
+        throw new Error("User not found.");
+      }
+
+      const data = update.value ?? secret.value;
+
+      const encrypted = await EncryptionService.encrypt({
+        password: user.pin,
+        data,
+      });
+      update.value = encrypted;
+    } else {
+      const user = await this.userRepository.findOne(
+        { _id: secret.userId },
+        "+pin",
+      );
+
+      if (!user) {
+        throw new Error("User not found.");
+      }
+
+      const data = update.value ?? secret.value;
+
+      const decrypted = await EncryptionService.decrypt({
+        password: user?.pin,
+        data,
+      });
+
+      update.value = decrypted;
+    }
+
+    await this.secretRepository.update(filter, update);
+  }
+
   async create(request: ISecret) {
     const secret = await this.secretRepository.findOne({ key: request.key });
 

@@ -5,13 +5,29 @@ import routes from "./routes";
 import http from "http";
 import cookieParser from "cookie-parser";
 
+const port = process.env.PORT;
+
 const app = express();
+
+app.set("trust proxy", true);
+app.set("query parser", "extended");
+
 app.use(morgan("combined"));
 app.use(cookieParser());
 app.use(express.json());
-app.set("trust proxy", true);
+app.use(express.urlencoded({ extended: true }));
+app.use((request, response, next) => {
+  const originalQuery = request.query;
 
-const port = process.env.PORT;
+  Object.defineProperty(request, "query", {
+    value: { ...originalQuery },
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
+  next();
+});
+
 app.use("/api/v1", routes);
 
 (async () => {

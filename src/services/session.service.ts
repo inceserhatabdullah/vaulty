@@ -25,13 +25,20 @@ export class SessionService {
   ): Promise<void> {
     await this.sessionRepository.update(filter, update);
   }
-  
+
   async softDelete(filter: QueryFilter<ISession>): Promise<void> {
     await this.sessionRepository.softDelete(filter);
   }
-  
+
   async softDeleteMany(filter: QueryFilter<ISession>): Promise<void> {
     await this.sessionRepository.softDeleteMany(filter);
+  }
+
+  async find(
+    filter: QueryFilter<ISession>,
+    select: string = "",
+  ): Promise<ISession[]> {
+    return this.sessionRepository.find(filter, select);
   }
 }
 

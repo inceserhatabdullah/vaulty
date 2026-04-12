@@ -1,8 +1,9 @@
 import { Schema, Query } from "mongoose";
+import { generateUUID } from "../../functions/generate-uuid.function";
 
 export const globalEntityPlugin = (schema: Schema) => {
   schema.add({
-    _id: { type: String, default: () => crypto.randomUUID() },
+    _id: { type: String, default: () => generateUUID() },
     isDeleted: { type: Boolean, default: false },
   });
 

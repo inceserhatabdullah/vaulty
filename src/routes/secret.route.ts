@@ -4,21 +4,23 @@ import {
   create,
   decrypt,
   find,
+  update,
 } from "../controllers/secret.controller";
 import { validateZod } from "../middleware/validate-zod.middleware";
-import { createSecretRequestDto } from "../dtos/create-secret.request.dto";
 import { requestHeaderMiddleware } from "../middleware/request-header.middleware";
 import { requestHeader } from "../constants/request-header.constant";
+import { SecretRequestDto } from "../dtos/secret.dto";
 
 const router = Router();
 
-router.get("/", timeoutMiddleware(5), find);
+router.get("/", timeoutMiddleware(), find);
 router.get(
   "/decrypt/:id",
   requestHeaderMiddleware(requestHeader.vaultPin),
-  timeoutMiddleware(2),
+  timeoutMiddleware(),
   decrypt,
 );
-router.post("/", validateZod(createSecretRequestDto), create);
+router.post("/", validateZod(SecretRequestDto.create), create);
+router.patch("/:id", validateZod(SecretRequestDto.update), update);
 
 export default router;
