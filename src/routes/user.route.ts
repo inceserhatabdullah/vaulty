@@ -5,11 +5,11 @@ import {
 } from "../controllers/user.controller";
 import { timeoutMiddleware } from "../middleware/timeout.middleware";
 import { validateZod } from "../middleware/validate-zod.middleware";
-import { userChangePasswordRequestDto } from "../dtos/user-change-password.request.dto";
+import { AuthRequestDto } from "../dtos/auth.dto";
 
 const router = Router();
 
 router.get("/", timeoutMiddleware(), find);
-router.patch("/password", timeoutMiddleware(), validateZod(userChangePasswordRequestDto), changePassword);
+router.patch("/password", timeoutMiddleware(), validateZod(AuthRequestDto.changePassword), changePassword);
 
 export default router;

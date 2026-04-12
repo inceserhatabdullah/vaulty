@@ -1,11 +1,10 @@
 import { z } from "zod/v3";
 import { regex } from "../constants/regex.constant";
 
-export const userDTO = {
+const userDTO = {
   username: z
     .string({
       required_error: "Username is required",
-      invalid_type_error: "Username must be a string",
     })
     .min(1, "Username must be at least 1 character"),
   password: z
@@ -26,4 +25,27 @@ export const userDTO = {
       regex.pin,
       "Pin must contain at least one letter, one number, and one special character",
     ),
+};
+
+export const AuthRequestDto = {
+  signin: z.object({
+    body: z.object({
+      username: userDTO.username,
+      password: userDTO.password,
+    }),
+  }),
+
+  signup: z.object({
+    body: z.object({
+      username: userDTO.username,
+      password: userDTO.password,
+      pin: userDTO.pin,
+    }),
+  }),
+
+  changePassword: z.object({
+    body: z.object({
+      password: userDTO.password,
+    }),
+  }),
 };
