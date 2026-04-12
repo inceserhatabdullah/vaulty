@@ -9,6 +9,6 @@ const secretDTO = z.object({
 });
 
 export const SecretRequestDto = {
-  create: secretDTO.pick({ key: true, value: true }).required(),
+  create: secretDTO.pick({ key: true, value: true }),
   update: secretDTO.partial(),
 };

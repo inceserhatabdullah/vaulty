@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { secretService } from "../services/secret.service";
 import { requestHeader } from "../constants/request-header.constant";
-import { SecretRequestDto } from "../dtos/secret.dto";
 
 export const create = async (request: Request, response: Response) => {
   try {
@@ -44,10 +43,10 @@ export const decrypt = async (request: Request, response: Response) => {
 
 export const update = async (request: Request, response: Response) => {
   try {
-   
-    const payload = SecretRequestDto.update.parse(request.body);
-    
-    await secretService.update({ _id: request.params.id as string }, payload);
+    await secretService.update(
+      { _id: request.params.id as string },
+      request.body,
+    );
     return response.status(200).json({ value: "decryptedValue" });
   } catch (error: any) {
     return response.status(400).json({ message: error.message });
