@@ -9,11 +9,6 @@ export const validateZod = (schema: AnyZodObject) => {
       request.body = parsed;
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        return response.status(400).json({
-          message: error.errors[0].message,
-        });
-      }
       next(error);
     }
   };

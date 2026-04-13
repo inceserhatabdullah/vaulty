@@ -4,6 +4,7 @@ import morgan from "morgan";
 import routes from "./routes";
 import http from "http";
 import cookieParser from "cookie-parser";
+import { globalErrorMiddleware } from "./middleware/global-error.middleware";
 
 const port = process.env.PORT;
 
@@ -30,7 +31,10 @@ app.use(express.urlencoded({ extended: true }));
 // });
 
 app.use("/api/v1", routes);
-
+app.use((error: any, request: express.Request, response: express.Response, next: express.NextFunction) => {
+  return globalErrorMiddleware(error, request, response, next);
+});
+  
 (async () => {
   let server: http.Server | undefined;
   try {

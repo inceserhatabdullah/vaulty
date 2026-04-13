@@ -1,8 +1,8 @@
 import { z } from "zod/v3";
 
 const secretDTO = z.object({
-  key: z.string(),
-  value: z.string(),
+  key: z.string({ required_error: "Key is required" }),
+  value: z.string({ required_error: "Value is required" }),
   title: z.string().optional(),
   category: z.string().optional().default("General"),
   encrypted: z.boolean().optional().default(false),
