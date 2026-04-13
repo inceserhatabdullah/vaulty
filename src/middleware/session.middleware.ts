@@ -23,6 +23,7 @@ export const parseUserAgentMiddleware = (
     location,
   };
 
-  request.session = configuration;
+  request._vaulty_.auth.session = configuration;
+
   next();
 };
