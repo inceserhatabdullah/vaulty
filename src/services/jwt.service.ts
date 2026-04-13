@@ -40,10 +40,7 @@ export class JwtService {
     return token;
   }
 
-  static verify(
-    token: string,
-    type: JWTType,
-  ) {
+  static verify(token: string, type: JWTType) {
     const configuration = this.jwtConfiguration[type];
     const { secret } = configuration as { secret: string };
 

@@ -7,12 +7,16 @@ import { JwtTypeValue } from "../types/jwt.type";
 import { JwtService } from "./jwt.service";
 import { redisService } from "./redis.service";
 import { generateUUID } from "../functions/generate-uuid.function";
+import { SigninRequestType, SignupRequestType } from "../types/auth.type";
 
 export class AuthService {
   constructor() {}
 
-  async signup(request: Request) {
-    const { username, password, pin } = request.body as IUser;
+  async signup(
+    payload: SignupRequestType,
+    identityContext: Express.VaultyAuthType,
+  ) {
+    const { username, password, pin } = payload;
 
     const user = await userService.findOne({ username });
 
@@ -36,14 +40,17 @@ export class AuthService {
       token: refreshToken,
       userId: newUser._id,
       expiresAt,
-      information: request.session,
+      information: identityContext.session,
     });
 
     return { accessToken, refreshToken };
   }
 
-  async signin(request: Request) {
-    const { username, password } = request.body;
+  async signin(
+    payload: SigninRequestType,
+    identityContext: Express.VaultyAuthType,
+  ) {
+    const { username, password } = payload;
 
     const user = await userService.findOne({ username }, "+password");
 
@@ -62,8 +69,8 @@ export class AuthService {
 
     const session = await sessionService.findOne({
       userId: user._id,
-      "information.os.name": request.session.os.name,
-      "information.browser.name": request.session.browser.name,
+      "information.os.name": identityContext.session.os.name,
+      "information.browser.name": identityContext.session.browser.name,
     });
 
     const sessionId = session ? session._id : generateUUID();
@@ -81,15 +88,18 @@ export class AuthService {
       {
         expiresAt,
         token: refreshToken,
-        information: request.session,
+        information: identityContext.session,
       },
     );
 
     return { accessToken, refreshToken };
   }
 
-  async refresh(request: Request, response: Response) {
-    const { refreshToken } = request.cookies;
+  async refresh(
+    cookies: Record<string, any>,
+    identityContext: Express.VaultyAuthType,
+  ) {
+    const { refreshToken } = cookies;
 
     if (!refreshToken) {
       throw new Error("No refresh token provided.");
@@ -100,18 +110,16 @@ export class AuthService {
     const session = await sessionService.findOne({
       userId: decoded.user._id,
       token: refreshToken,
-      "information.os.name": request.session.os.name,
-      "information.browser.name": request.session.browser.name,
+      "information.os.name": identityContext.session.os.name,
+      "information.browser.name": identityContext.session.browser.name,
     });
 
     if (!session) {
       await sessionService.softDelete({
         userId: decoded.user._id,
-        "information.os.name": request.session.os.name,
-        "information.browser.name": request.session.browser.name,
+        "information.os.name": identityContext.session.os.name,
+        "information.browser.name": identityContext.session.browser.name,
       });
-
-      this.clearCookie(response);
 
       throw new Error("Session not found.");
     }
@@ -125,7 +133,7 @@ export class AuthService {
       sessionId: session._id,
     });
 
-    await this.setBlackListAccessToken(request.authorization!.accessToken);
+    await this.setBlackListAccessToken(identityContext.accessToken);
 
     await sessionService.update(
       {
@@ -134,7 +142,7 @@ export class AuthService {
       {
         expiresAt,
         token: newRefreshToken,
-        information: request.session,
+        information: identityContext.session,
       },
     );
 
@@ -178,14 +186,16 @@ export class AuthService {
     response.clearCookie("refreshToken", { path: "/api/v1/auth/refresh" });
   }
 
-  async logout(request: Request, response: Response) {
-    const clearAll = request.query?.all === "true";
+  async logout(
+    identityContext: Express.VaultyAuthType,
+    clearAll: boolean = false,
+  ) {
     const verified = JwtService.verify(
-      request.authorization!.accessToken,
+      identityContext.accessToken,
       JwtTypeValue.access_token,
     );
 
-    await this.setBlackListAccessToken(request.authorization!.accessToken);
+    await this.setBlackListAccessToken(identityContext.accessToken);
 
     if (clearAll) {
       await sessionService.softDeleteMany({ userId: verified.user._id });
@@ -194,8 +204,6 @@ export class AuthService {
         _id: verified.session._id,
       });
     }
-
-    this.clearCookie(response);
   }
 
   async setBlackListAccessToken(accessToken: string) {

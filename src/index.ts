@@ -16,17 +16,18 @@ app.use(morgan("combined"));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use((request, response, next) => {
-  const originalQuery = request.query;
 
-  Object.defineProperty(request, "query", {
-    value: { ...originalQuery },
-    writable: true,
-    configurable: true,
-    enumerable: true,
-  });
-  next();
-});
+// update coming request object if needed
+// app.use((request, response, next) => {
+//   const originalQuery = request.query;
+//   Object.defineProperty(request, "query", {
+//     value: { ...originalQuery },
+//     writable: true,
+//     configurable: true,
+//     enumerable: true,
+//   });
+//   next();
+// });
 
 app.use("/api/v1", routes);
 

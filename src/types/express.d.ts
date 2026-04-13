@@ -1,13 +1,12 @@
 declare namespace Express {
   interface Request {
-    session?: any;
-    authorization?: {
-      user?: {
-        _id: string;
-      };
-      accessToken: string;
+    _vaulty_: {
+      auth: VaultyAuthType;
     };
   }
-}
 
-// TODO request içerisinde session bilgisi düzenlenmeli. token için de session id bilgisi var, request içerisinde o an session objecti yazıyor. olmamalı.
+  type VaultyAuthType = {
+    session: Record<string, any>;
+    accessToken: string;
+  };
+}

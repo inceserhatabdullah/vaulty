@@ -46,9 +46,11 @@ export const authMiddleware = async (
       });
     }
 
-    request.authorization = {
-      user: { _id: verified.user._id },
-      accessToken: token,
+    request._vaulty_ = {
+      auth: {
+        ...request._vaulty_.auth,
+        accessToken: token,
+      } as Express.VaultyAuthType,
     };
 
     next();
