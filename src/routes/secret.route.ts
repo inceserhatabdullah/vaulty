@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { timeoutMiddleware } from "../middleware/timeout.middleware";
 import {
+  _delete,
   create,
   decrypt,
   find,
@@ -22,5 +23,6 @@ router.get(
 );
 router.post("/", validateZod(SecretRequestDto.create), create);
 router.patch("/:id", validateZod(SecretRequestDto.update), update);
+router.delete("/:id", timeoutMiddleware(), _delete);
 
 export default router;

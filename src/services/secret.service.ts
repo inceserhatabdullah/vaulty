@@ -4,6 +4,10 @@ export class SecretService {
     private readonly userRepository: UserRepository,
   ) {}
 
+  async delete(filter: QueryFilter<ISecret>) {
+    await this.secretRepository.softDelete(filter);
+  }
+
   async update(filter: QueryFilter<ISecret>, update: Partial<ISecret>) {
     const secret = await this.secretRepository.findOne(filter, "+value");
 

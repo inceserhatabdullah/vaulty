@@ -62,7 +62,16 @@ export const update = async (request: Request, response: Response) => {
       { _id: request.params.id as string },
       request.body,
     );
-    return response.status(200).json({ value: "decryptedValue" });
+    return response.status(200).json();
+  } catch (error: any) {
+    return response.status(400).json({ message: error.message });
+  }
+};
+
+export const _delete = async (request: Request, response: Response) => {
+  try {
+    await secretService.delete({ _id: request.params.id as string });
+    return response.status(200).json();
   } catch (error: any) {
     return response.status(400).json({ message: error.message });
   }
