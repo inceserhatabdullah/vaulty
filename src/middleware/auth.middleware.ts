@@ -46,7 +46,12 @@ export const authMiddleware = async (
       });
     }
 
-    request._vaulty_.auth.accessToken = token;
+    request._vaulty_ = {
+      auth: {
+        ...request._vaulty_.auth,
+        accessToken: token,
+      } as Express.VaultyAuthType,
+    };
 
     next();
   } catch (error: any) {

@@ -51,16 +51,24 @@ export class SecretService {
     await this.secretRepository.update(filter, update);
   }
 
-  async create(request: ISecret) {
-    const secret = await this.secretRepository.findOne({ key: request.key });
+  async create(
+    payload: CreateSecretRequestType,
+    identityContext: Express.VaultyAuthType,
+  ) {
+    const secret = await this.secretRepository.findOne({ key: payload.key });
 
     if (secret) {
       throw new Error("Secret with this key already exists.");
     }
 
-    if (request.encrypted) {
+    const decoded = JwtService.verify(
+      identityContext.accessToken,
+      JwtTypeValue.access_token,
+    );
+
+    if (payload.encrypted) {
       const user = await this.userRepository.findOne(
-        { _id: request.userId },
+        { _id: decoded.user._id },
         "+pin",
       );
 
@@ -70,12 +78,12 @@ export class SecretService {
 
       const encrypted = await EncryptionService.encrypt({
         password: user.pin,
-        data: request.value,
+        data: payload.value,
       });
-      request.value = encrypted;
+      payload.value = encrypted;
     }
 
-    const newSecret = await this.secretRepository.create(request);
+    const newSecret = await this.secretRepository.create(payload);
     return { _id: newSecret._id };
   }
 
@@ -136,6 +144,9 @@ import {
   userRepository,
 } from "../repositories/user.repository";
 import { EncryptionService } from "./encryption.service";
+import { CreateSecretRequestType } from "../types/secret.type";
+import { JwtService } from "./jwt.service";
+import { JwtTypeValue } from "../types/jwt.type";
 
 export const secretService = new SecretService(
   secretRepository,

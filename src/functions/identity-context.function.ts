@@ -1,5 +1,3 @@
-import { Request } from "express";
-
-export function identityContext(request: Request) {
+export function identityContext(request: Express.Request) {
   return request._vaulty_.auth;
 }

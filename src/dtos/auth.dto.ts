@@ -22,7 +22,7 @@ const userDTO = z.object({
 export const AuthRequestDto = {
   signin: userDTO.pick({ username: true, password: true }),
 
-  signup: userDTO.pick({ username: true, password: true, pin: true }),
+  signup: userDTO,
 
   changePassword: userDTO.pick({ password: true }),
 };
