@@ -5,24 +5,21 @@ import { authService } from "../services/auth.service";
 import { identityContext } from "../functions/identity-context.function";
 import { JwtService } from "../services/jwt.service";
 import { JwtTypeValue } from "../types/jwt.type";
+import { catchAsync } from "../functions/catch-async.function";
 
-export const find = async (request: Request, response: Response) => {
-  try {
-    const context = identityContext(request);
-    const decoded = JwtService.verify(
-      context.accessToken,
-      JwtTypeValue.access_token,
-    );
-    const userData = await userRepository.findOne({ _id: decoded.user._id });
+export const find = catchAsync(async (request: Request, response: Response) => {
+  const context = identityContext(request);
+  const decoded = JwtService.verify(
+    context.accessToken,
+    JwtTypeValue.access_token,
+  );
+  const userData = await userRepository.findOne({ _id: decoded.user._id });
 
-    return response.status(200).json(userData);
-  } catch (error: any) {
-    return response.status(400).json({ error: error.message });
-  }
-};
+  return response.status(200).json(userData);
+});
 
-export const changePassword = async (request: Request, response: Response) => {
-  try {
+export const changePassword = catchAsync(
+  async (request: Request, response: Response) => {
     const context = identityContext(request);
     const decoded = JwtService.verify(
       context.accessToken,
@@ -45,7 +42,5 @@ export const changePassword = async (request: Request, response: Response) => {
       message:
         "Your password has been changed. To ensure your account's safety, we’ve logged you out of all devices. Please sign in with your new password.",
     });
-  } catch (error: any) {
-    return response.status(400).json({ error: error.message });
-  }
-};
+  },
+);
