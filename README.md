@@ -1,4 +1,4 @@
-# Vaulty Project: Technical Deep-Dive
+# Vaulty
 - Vaulty, hassas verileri AES-256-GCM şifreleme ve Stateless-Stateful Hybrid oturum yönetimi stratejileriyle koruyan, yüksek güvenlikli bir backend servisidir.
 
 # Mimari Yaklaşım
