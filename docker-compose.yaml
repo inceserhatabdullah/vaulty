@@ -27,6 +27,20 @@ services:
     networks:
       - database_network
 
+  vaulty-app:
+    build: .
+    container_name: vaulty_api
+    restart: unless-stopped
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - .env
+    networks:
+      - database_network
+    depends_on:
+      - mongodb
+      - redis
+
 networks:
   database_network:
     driver: bridge
