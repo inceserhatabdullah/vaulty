@@ -2,7 +2,7 @@ import { Request, Response, NextFunction, ErrorRequestHandler } from "express";
 import { AppError } from "../models/app/error.model";
 import logger from "../functions/logger.function";
 
-export const globalErrorMiddleware: ErrorRequestHandler = (
+export const errorMiddleware: ErrorRequestHandler = (
   error: any,
   request: Request,
   response: Response,
@@ -10,7 +10,6 @@ export const globalErrorMiddleware: ErrorRequestHandler = (
 ) => {
   error.code = error.statusCode ?? error.code ?? 500;
 
-  console.log(' error ', error)
   logger.error(
     `${error.code} - ${error.message} - ${request.originalUrl} - ${request.method} - ${request.ip} `,
     {
@@ -29,4 +28,22 @@ export const globalErrorMiddleware: ErrorRequestHandler = (
   response.status(error.code).json({
     message: error.message ?? "Internal Server Error",
   });
+};
+
+export const requestLoggerMiddleware = (
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) => {
+  response.on("finish", () => {
+    const infoStatus = response.statusCode >= 200 && response.statusCode < 400;
+    const warnStatus = response.statusCode >= 400 && response.statusCode < 500;
+    const message = `${response.statusCode} - ${request.originalUrl} ${request.method} - ${request.ip}`;
+    if (infoStatus) {
+      logger.info(message);
+    } else if (warnStatus) {
+      logger.warn(message);
+    }
+  });
+  next();
 };
