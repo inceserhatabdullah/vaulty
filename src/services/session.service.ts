@@ -8,7 +8,7 @@ import {
 export class SessionService {
   constructor(private readonly sessionRepository: SessionRepository) {}
 
-  async create(session: Partial<ISession>): Promise<void> {
+  async create(session: ISession): Promise<void> {
     await this.sessionRepository.create(session);
   }
 

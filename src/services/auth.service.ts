@@ -8,6 +8,7 @@ import { JwtService } from "./jwt.service";
 import { redisService } from "./redis.service";
 import { generateUUID } from "../functions/generate-uuid.function";
 import { SigninRequestType, SignupRequestType } from "../types/auth.type";
+import { ISession } from "../models/session.model";
 
 export class AuthService {
   constructor() {}
@@ -41,7 +42,7 @@ export class AuthService {
       userId: newUser._id,
       expiresAt,
       information: identityContext.session,
-    });
+    } as ISession);
 
     return { accessToken, refreshToken };
   }
