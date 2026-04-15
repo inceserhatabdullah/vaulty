@@ -1,19 +1,25 @@
 import { connectMongoose } from "./database/mongoose.database";
 import express from "express";
-import morgan from "morgan";
 import routes from "./routes";
 import http from "http";
 import cookieParser from "cookie-parser";
-import { globalErrorMiddleware } from "./middleware/global-error.middleware";
+import {
+  errorMiddleware,
+  requestLoggerMiddleware,
+} from "./middleware/logger.middleware";
+import { apiLimiter } from "./middleware/rate-limiter.middleware";
 
 const port = process.env.PORT;
 
 const app = express();
 
-app.set("trust proxy", true);
+// app.set("trust proxy", true);
 app.set("query parser", "extended");
 
-app.use(morgan("combined"));
+app.use(requestLoggerMiddleware);
+app.use(apiLimiter);
+
+//app.use(morgan("combined"));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -31,10 +37,19 @@ app.use(express.urlencoded({ extended: true }));
 // });
 
 app.use("/api/v1", routes);
-app.use((error: any, request: express.Request, response: express.Response, next: express.NextFunction) => {
-  return globalErrorMiddleware(error, request, response, next);
-});
-  
+
+
+app.use(
+  (
+    error: any,
+    request: express.Request,
+    response: express.Response,
+    next: express.NextFunction,
+  ) => {
+    return errorMiddleware(error, request, response, next);
+  },
+);
+
 (async () => {
   let server: http.Server | undefined;
   try {
