@@ -29,6 +29,7 @@
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.0",
+    "express-rate-limit": "^8.3.2",
     "generate-password": "^1.7.1",
     "geoip-lite": "^2.0.1",
     "ioredis": "^5.10.1",
