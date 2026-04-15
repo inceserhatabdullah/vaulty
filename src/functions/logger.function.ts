@@ -1,22 +1,18 @@
 import winston from "winston";
 import "winston-daily-rotate-file";
 
-const { combine, timestamp, printf, colorize } = winston.format;
-
-const format = printf(({ level, message, timestamp, stack }) => {
-  return `${timestamp} [${level.toUpperCase()}]: ${message} ${stack ? `\n${stack}` : ""}`;
-});
-
 const logger = winston.createLogger({
   level: "info",
-  format: combine(
-    timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-    format,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.printf(({ level, message, stack, timestamp }) => {
+      return `${timestamp} [${level.toUpperCase()}]: ${message} ${stack ? `\n${stack}` : ""}`;
+    }),
   ),
   transports: [
     /* console logs */
     new winston.transports.Console({
-      format: combine(colorize(), format),
+      format: winston.format.combine(winston.format.colorize({ all: true })),
     }),
     /* error logs file */
     new winston.transports.DailyRotateFile({
@@ -24,16 +20,18 @@ const logger = winston.createLogger({
       datePattern: "YYYY-MM-DD",
       auditFile: "logs/state/audit.json",
       level: "error",
-      maxSize: "1m",
+      maxSize: "10m",
       maxFiles: "14d",
+      format: winston.format.combine(winston.format.json()),
     }),
     /* all logs file */
     new winston.transports.DailyRotateFile({
       filename: "logs/combined-%DATE%.log",
       auditFile: "logs/state/audit.json",
       datePattern: "YYYY-MM-DD",
-      maxSize: "1m",
+      maxSize: "10m",
       maxFiles: "14d",
+      format: winston.format.combine(winston.format.json()),
     }),
     // new EmailTransport({ to: 'admin@vaulty.com' })
   ],
