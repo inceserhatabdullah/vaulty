@@ -1,30 +1,44 @@
-# Vault Project Technical Documentation
-Vault, hassas verileri (şifreler, notlar vb.) AES-256 şifreleme ve gelişmiş JWT oturum yönetimi stratejileriyle koruyan, Node.js tabanlı güvenli bir backend servisidir.
+# Vaulty
+- Vaulty, hassas verileri AES-256-GCM şifreleme ve Stateless-Stateful Hybrid oturum yönetimi stratejileriyle koruyan, yüksek güvenlikli bir backend servisidir.
+
+# Mimari Yaklaşım
+- Proje, Layered Architecture (Katmanlı Mimari) prensipleriyle geliştirilmiştir:
+- Controller Layer: Request validation (Zod) ve veri ayrıştırma.
+- Service Layer (Business Logic): İş mantığı ve güvenlik protokollerinin icrası.
+- Repository Layer (Data Access): Soyutlanmış veritabanı işlemleri (MongoDB/Mongoose).
 
 # Kimlik Doğrulama ve Yetkilendirme
+1. Şifreleme ve Hashleme
+- Argon2id Hashing: Kullanıcı şifreleri ve Vault PIN'leri, GPU saldırılarına dayanıklı Argon2id algoritması kullanılarak "salt" ile hash'lenir.
 
-1. Güvenli Kayıt ve Giriş (Signup & Signin)
-- Argon2 Hashing: Kullanıcı şifreleri ve Vault PIN'leri, endüstri standardı olan Argon2id algoritması ile hash'lenerek saklanır.
-- Dual Token Response: İşlem başarılı olduğunda kullanıcıya kısa ömürlü bir accessToken ve uzun ömürlü bir refreshToken üretilir.
+- Dual Token Yapısı: 1 saat Short-lived Access Token ve 7 günlük Long-lived Refresh Token.
 
-2. Gelişmiş Oturum Yönetimi
-- HttpOnly & Secure Cookies: refreshToken, tarayıcı tarafındaki JavaScript erişimine kapalı (XSS korumalı) cookie'lerde saklanır.
-- Path Scoping: Cookie'ler sadece `/auth/refresh` dizinine özel kısıtlanarak veri sızıntısı minimize edilir.
-- Token Rotation: Her refresh işleminde eski refreshToken imha edilir ve yeni bir tane üretilir. Bu sayede çalınan token'ların ömrü kısalır.
-- Device Awareness: Oturumlar cihaz bazlı (User-Agent ve IP) takip edilir. Cihaz uyuşmazlığı durumunda güvenlik alarmı tetiklenir.
+2. Gelişmiş Oturum (Session) Yönetimi
+- Stateful Refresh Tokens: Refresh token'lar veritabanında sessions koleksiyonu ile eşleştirilir. Bu, sunucunun dilediği an bir oturumu "iptal etme" (revoke) yeteneği kazanmasını sağlar.
 
-3. Oturum Kapatma (Logout)
-- Tekli & Global Logout: Kullanıcı dilerse sadece mevcut cihazdaki oturumunu, dilerse tüm cihazlardaki aktif oturumlarını tek tıkla sonlandırabilir.
-- Automatic Revoking: Veritabanında karşılığı bulunmayan bir refresh isteği geldiğinde (Reuse Detection), kullanıcıya ait tüm oturumlar güvenlik gerekçesiyle otomatik olarak silinir.
+- Reuse Detection: Eğer eski bir refreshToken ile sisteme erişilmeye çalışılırsa, sistem bunu bir saldırı (token çalınması) kabul eder ve kullanıcının tüm aktif oturumlarını anında temizler.
 
-4. Şifre Üretici (Password Generator)
-- Cryptographically Secure: Tahmin edilmesi imkansız, yüksek entropiye sahip rastgele şifre üretim mekanizması sunar.
+3. Oturum Denetimi (Sessions API)
+- Remote Logout: Kullanıcı GET /auth/sessions ile tüm cihazlarını görebilir ve DELETE /auth/sessions/:id ile çalınan veya açık unutulan cihazın "fişini uzaktan çekebilir".
 
-# Sır Saklama ve Şifreleme
-1. Veri Şifreleme (Create Secret)
-- AES-256-GCM: Veriler veritabanına kaydedilmeden önce AES-256 algoritması ile şifrelenir.
-- Master Key & PIN Logic: Veriler sadece kullanıcının Vault PIN'i ile türetilen anahtarlarla çözülebilir. Sunucu sahibi bile anahtar olmadan veriye erişemez.
+# Sır Saklama ve Kasa Güvenliği
+1. End-to-End Encryption Mantığı
+- AES-256-GCM: Veriler sadece şifrelenmez, aynı zamanda GCM (Galois/Counter Mode) sayesinde verinin bütünlüğü (integrity) de kontrol edilir. Veri üzerinde 1 bit bile oynansa şifre çözülemez.
 
-2. Veri Çözme (Decrypt Secret)
-- Header-Based Verification: Hassas veriyi çözmek için gerekli olan vault-pin, request body yerine özel bir request header üzerinden güvenli bir şekilde taşınır.
-- Ownership Check: Her sır (secret), onu oluşturan userId ile sıkı sıkıya bağlıdır. Yetkisiz erişim denemeleri veritabanı seviyesinde engellenir.
+- Master Key Türetme: Sunucu, kullanıcının ana PIN'ini asla saklamaz. Şifreleme anahtarı, istek anında gönderilen vault-pin header'ı üzerinden çalışma zamanında (runtime) oluşturulur.
+
+2. Veri Güvenliği Protokolü
+- Header-Based Security: Hassas anahtarlar (PIN) asla request body veya URL parametresi olarak gönderilmez; sadece güvenli başlıklar (Custom Headers) üzerinden taşınır.
+
+- Ownership Validation: Her Secret dokümanı, veritabanı seviyesinde bir ownerId ile korunur. Service katmanı, işlem yapan userId ile verinin sahibini eşleştirmeden asla deşifre işlemi başlatmaz.
+
+# Dockerize
+
+```
+├── nginx/
+│   └── default.conf    # Nginx reverse proxy ayarları
+├── src/                # Uygulama kaynak kodları
+├── docker-compose.yml  # Servis orkestrasyonu
+├── Dockerfile          # API imaj yapılandırması
+└── .env                # Hassas yapılandırmalar
+```

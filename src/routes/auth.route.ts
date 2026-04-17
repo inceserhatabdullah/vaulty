@@ -5,24 +5,40 @@ import {
   refresh,
   generatePassword,
   logout,
+  session,
+  deleteSession,
 } from "../controllers/auth.controller";
 import { validateZod } from "../middleware/validate-zod.middleware";
 import { timeoutMiddleware } from "../middleware/timeout.middleware";
-import { signupRequestDto } from "../dtos/signup.request.dto";
-import { signinRequestDto } from "../dtos/signin.request.dto";
-import { verifyTokenMiddleware } from "../middleware/verify-token.middleware";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { AuthRequestDto } from "../dtos/auth.dto";
+import { authLimiter } from "../middleware/rate-limiter.middleware";
 
 const router = Router();
 
-router.post("/signup", validateZod(signupRequestDto), signup);
-router.post("/signin", validateZod(signinRequestDto), signin);
-router.patch("/refresh", verifyTokenMiddleware, timeoutMiddleware(2), refresh);
+router.post("/signup", authLimiter, validateZod(AuthRequestDto.signup), signup);
+router.post("/signin", authLimiter, validateZod(AuthRequestDto.signin), signin);
+router.patch(
+  "/refresh",
+  authLimiter,
+  authMiddleware,
+  timeoutMiddleware(2),
+  refresh,
+);
 router.get(
   "/generate-password",
-  verifyTokenMiddleware,
-  timeoutMiddleware(1),
+  authMiddleware,
+  timeoutMiddleware(),
   generatePassword,
 );
-router.get("/logout", verifyTokenMiddleware, timeoutMiddleware(2), logout);
+router.get("/logout", authLimiter, authMiddleware, timeoutMiddleware(), logout);
+router.get("/sessions", authMiddleware, timeoutMiddleware(), session);
+router.delete(
+  "/sessions/:id",
+  authLimiter,
+  authMiddleware,
+  timeoutMiddleware(),
+  deleteSession,
+);
 
 export default router;

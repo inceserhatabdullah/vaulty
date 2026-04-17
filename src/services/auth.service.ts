@@ -5,12 +5,19 @@ import { IUser } from "../models/user.model";
 import { EncryptionService } from "./encryption.service";
 import { JwtTypeValue } from "../types/jwt.type";
 import { JwtService } from "./jwt.service";
+import { redisService } from "./redis.service";
+import { generateUUID } from "../functions/generate-uuid.function";
+import { SigninRequestType, SignupRequestType } from "../types/auth.type";
+import { ISession } from "../models/session.model";
 
 export class AuthService {
   constructor() {}
 
-  async signup(request: Request) {
-    const { username, password, pin } = request.body as IUser;
+  async signup(
+    payload: SignupRequestType,
+    identityContext: Express.VaultyAuthType,
+  ) {
+    const { username, password, pin } = payload;
 
     const user = await userService.findOne({ username });
 
@@ -24,21 +31,27 @@ export class AuthService {
       pin,
     });
 
+    const sessionId: string = generateUUID();
+
     const { accessToken, refreshToken, expiresAt } =
-      this.generateAndStoreTokens({ userId: newUser._id });
+      this.generateAndStoreTokens({ userId: newUser._id, sessionId });
 
     await sessionService.create({
+      _id: sessionId,
       token: refreshToken,
       userId: newUser._id,
       expiresAt,
-      information: request.session,
-    });
+      information: identityContext.session,
+    } as ISession);
 
     return { accessToken, refreshToken };
   }
 
-  async signin(request: Request) {
-    const { username, password } = request.body;
+  async signin(
+    payload: SigninRequestType,
+    identityContext: Express.VaultyAuthType,
+  ) {
+    const { username, password } = payload;
 
     const user = await userService.findOne({ username }, "+password");
 
@@ -55,27 +68,39 @@ export class AuthService {
       throw new Error("Invalid credentials.");
     }
 
+    const session = await sessionService.findOne({
+      userId: user._id,
+      "information.os.name": identityContext.session.os.name,
+      "information.browser.name": identityContext.session.browser.name,
+    });
+
+    const sessionId = session ? session._id : generateUUID();
+
     const { accessToken, refreshToken, expiresAt } =
-      this.generateAndStoreTokens({ userId: user._id });
+      this.generateAndStoreTokens({
+        userId: user._id,
+        sessionId,
+      });
 
     await sessionService.update(
       {
-        userId: user._id,
-        "information.os.name": request.session.os.name,
-        "information.browser.name": request.session.browser.name,
+        _id: sessionId,
       },
       {
         expiresAt,
         token: refreshToken,
-        information: request.session,
+        information: identityContext.session,
       },
     );
 
     return { accessToken, refreshToken };
   }
 
-  async refresh(request: Request, response: Response) {
-    const { refreshToken } = request.cookies;
+  async refresh(
+    cookies: Record<string, any>,
+    identityContext: Express.VaultyAuthType,
+  ) {
+    const { refreshToken } = cookies;
 
     if (!refreshToken) {
       throw new Error("No refresh token provided.");
@@ -86,18 +111,16 @@ export class AuthService {
     const session = await sessionService.findOne({
       userId: decoded.user._id,
       token: refreshToken,
-      "information.os.name": request.session.os.name,
-      "information.browser.name": request.session.browser.name,
+      "information.os.name": identityContext.session.os.name,
+      "information.browser.name": identityContext.session.browser.name,
     });
 
     if (!session) {
-      await sessionService.softDeleteMany({
+      await sessionService.softDelete({
         userId: decoded.user._id,
-        "information.os.name": request.session.os.name,
-        "information.browser.name": request.session.browser.name,
+        "information.os.name": identityContext.session.os.name,
+        "information.browser.name": identityContext.session.browser.name,
       });
-
-      this.clearCookie(response);
 
       throw new Error("Session not found.");
     }
@@ -106,31 +129,37 @@ export class AuthService {
       accessToken,
       refreshToken: newRefreshToken,
       expiresAt,
-    } = this.generateAndStoreTokens({ userId: decoded.user._id });
+    } = this.generateAndStoreTokens({
+      userId: decoded.user._id,
+      sessionId: session._id,
+    });
+
+    await this.setBlackListAccessToken(identityContext.accessToken);
 
     await sessionService.update(
       {
-        userId: decoded.user._id,
-        token: refreshToken,
-        "information.os.name": request.session.os.name,
-        "information.browser.name": request.session.browser.name,
+        _id: session._id,
       },
       {
         expiresAt,
         token: newRefreshToken,
-        information: request.session,
+        information: identityContext.session,
       },
     );
 
     return { accessToken, refreshToken: newRefreshToken };
   }
 
-  private generateAndStoreTokens(request: { userId: string }) {
-    const { userId } = request;
+  private generateAndStoreTokens(request: {
+    userId: string;
+    sessionId: string;
+  }) {
+    const { userId, sessionId } = request;
 
     const accessToken = JwtService.generate(
       {
         userId,
+        sessionId,
       },
       JwtTypeValue.access_token,
     );
@@ -138,11 +167,12 @@ export class AuthService {
     const refreshToken = JwtService.generate(
       {
         userId,
+        sessionId,
       },
       JwtTypeValue.refresh_token,
     );
 
-    const decoded = JwtService.decode(refreshToken);
+    const decoded = JwtService.verify(refreshToken, JwtTypeValue.refresh_token);
     const expiresAt = JwtService.calculateExpiry(decoded);
 
     return { accessToken, refreshToken, expiresAt };
@@ -153,28 +183,40 @@ export class AuthService {
     response.cookie("refreshToken", token, cookie);
   }
 
-  private clearCookie(response: Response) {
+  clearCookie(response: Response) {
     response.clearCookie("refreshToken", { path: "/api/v1/auth/refresh" });
   }
 
-  async logout(request: Request, response: Response) {
-    const clearAll = request.query?.all === "true";
-    const decoded = JwtService.verify(
-      request.authorization!.accessToken,
+  async logout(
+    identityContext: Express.VaultyAuthType,
+    clearAll: boolean = false,
+  ) {
+    const verified = JwtService.verify(
+      identityContext.accessToken,
       JwtTypeValue.access_token,
     );
 
+    await this.setBlackListAccessToken(identityContext.accessToken);
+
     if (clearAll) {
-      await sessionService.softDeleteMany({ userId: decoded.user._id });
+      await sessionService.softDeleteMany({ userId: verified.user._id });
     } else {
       await sessionService.softDelete({
-        userId: decoded.user._id,
-        "information.os.name": request.session.os.name,
-        "information.browser.name": request.session.browser.name,
+        _id: verified.session._id,
       });
     }
+  }
 
-    this.clearCookie(response);
+  async setBlackListAccessToken(accessToken: string) {
+    const payload = JwtService.verify(accessToken, JwtTypeValue.access_token);
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = payload.exp! - now + 10;
+    const blackListKey =
+      redisService.getBlackListedAccessTokenConstant(accessToken);
+
+    if (expiresIn > 0) {
+      await redisService.set(blackListKey, true, expiresIn);
+    }
   }
 
   generatePassword(): string {

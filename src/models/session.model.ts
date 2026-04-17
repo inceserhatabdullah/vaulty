@@ -10,8 +10,8 @@ export interface ISession extends IBaseEntity {
 
 const sessionSchema = new Schema<ISession>({
   userId: { type: String, required: true, ref: "User" },
-  token: { type: String, required: true, unique: true },
-  expiresAt: { type: Date, required: true, index: { expires: 0 } },
+  token: { type: String, required: true, unique: true, select: false },
+  expiresAt: { type: Date, required: true, index: { expires: 0 }, select: false },
   information: { type: Object, required: false },
 });
 

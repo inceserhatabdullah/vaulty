@@ -1,11 +1,12 @@
 declare namespace Express {
   interface Request {
-    user?: {
-      _id: string;
-    };
-    session?: any;
-    authorization?: {
-      accessToken: string;
+    _vaulty_: {
+      auth: VaultyAuthType;
     };
   }
+
+  type VaultyAuthType = {
+    session: Record<string, any>;
+    accessToken: string;
+  };
 }
