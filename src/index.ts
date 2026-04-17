@@ -13,7 +13,7 @@ const port = process.env.PORT;
 
 const app = express();
 
-// app.set("trust proxy", true);
+app.set("trust proxy", true);
 app.set("query parser", "extended");
 
 app.use(requestLoggerMiddleware);
