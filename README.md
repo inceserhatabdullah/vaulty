@@ -31,3 +31,14 @@
 - Header-Based Security: Hassas anahtarlar (PIN) asla request body veya URL parametresi olarak gönderilmez; sadece güvenli başlıklar (Custom Headers) üzerinden taşınır.
 
 - Ownership Validation: Her Secret dokümanı, veritabanı seviyesinde bir ownerId ile korunur. Service katmanı, işlem yapan userId ile verinin sahibini eşleştirmeden asla deşifre işlemi başlatmaz.
+
+# Dockerize
+
+```
+├── nginx/
+│   └── default.conf    # Nginx reverse proxy ayarları
+├── src/                # Uygulama kaynak kodları
+├── docker-compose.yml  # Servis orkestrasyonu
+├── Dockerfile          # API imaj yapılandırması
+└── .env                # Hassas yapılandırmalar
+```
